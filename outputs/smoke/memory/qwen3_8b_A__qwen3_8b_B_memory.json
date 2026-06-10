@@ -1,0 +1,157 @@
+{
+  "alpha": 10.0,
+  "counts": {
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|independent": {
+      "correct": 1,
+      "total": 2
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|independent": {
+      "correct": 3,
+      "total": 8
+    },
+    "agent_topic_stage|qwen3:8b|intermediate_algebra|independent": {
+      "correct": 2,
+      "total": 4
+    },
+    "agent_stage|qwen3:8b|independent": {
+      "correct": 6,
+      "total": 16
+    },
+    "global_stage|independent": {
+      "correct": 6,
+      "total": 16
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|independent": {
+      "correct": 1,
+      "total": 2
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|independent": {
+      "correct": 3,
+      "total": 8
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|post_debate": {
+      "correct": 1,
+      "total": 2
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|post_debate": {
+      "correct": 3,
+      "total": 8
+    },
+    "agent_topic_stage|qwen3:8b|intermediate_algebra|post_debate": {
+      "correct": 2,
+      "total": 4
+    },
+    "agent_stage|qwen3:8b|post_debate": {
+      "correct": 6,
+      "total": 16
+    },
+    "global_stage|post_debate": {
+      "correct": 6,
+      "total": 16
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|post_debate": {
+      "correct": 1,
+      "total": 2
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|post_debate": {
+      "correct": 3,
+      "total": 8
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|independent": {
+      "correct": 0,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|number_theory|independent": {
+      "correct": 0,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|independent": {
+      "correct": 0,
+      "total": 1
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|post_debate": {
+      "correct": 0,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|number_theory|post_debate": {
+      "correct": 0,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|post_debate": {
+      "correct": 0,
+      "total": 1
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|independent": {
+      "correct": 1,
+      "total": 3
+    },
+    "agent_topic_stage|qwen3:8b|algebra|independent": {
+      "correct": 2,
+      "total": 6
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|independent": {
+      "correct": 1,
+      "total": 3
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|post_debate": {
+      "correct": 1,
+      "total": 3
+    },
+    "agent_topic_stage|qwen3:8b|algebra|post_debate": {
+      "correct": 2,
+      "total": 6
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|post_debate": {
+      "correct": 1,
+      "total": 3
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|independent": {
+      "correct": 1,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|prealgebra|independent": {
+      "correct": 2,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|independent": {
+      "correct": 1,
+      "total": 1
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|post_debate": {
+      "correct": 1,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|prealgebra|post_debate": {
+      "correct": 2,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|post_debate": {
+      "correct": 1,
+      "total": 1
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|independent": {
+      "correct": 0,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|counting_&_probability|independent": {
+      "correct": 0,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|independent": {
+      "correct": 0,
+      "total": 1
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|post_debate": {
+      "correct": 0,
+      "total": 1
+    },
+    "agent_topic_stage|qwen3:8b|counting_&_probability|post_debate": {
+      "correct": 0,
+      "total": 2
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|post_debate": {
+      "correct": 0,
+      "total": 1
+    }
+  }
+}

@@ -1,0 +1,8 @@
+method,acc,c2w_count,c2w_rate,preservation,selected_A0,selected_B0,selected_A1,selected_B1
+stateless_debate,0.375,0,0.0,1.0,0,0,16,0
+4cand_majority,0.375,0,0.0,1.0,11,4,0,1
+4cand_confidence,0.375,0,0.0,1.0,14,1,0,1
+overall_reliability,0.375,0,0.0,1.0,15,0,0,1
+agent_topic_reliability,0.375,0,0.0,1.0,15,0,0,1
+pac_math_pair_topic_stage,0.375,0,0.0,1.0,15,0,0,1
+oracle_candidate,0.375,0,0.0,1.0,16,0,0,0

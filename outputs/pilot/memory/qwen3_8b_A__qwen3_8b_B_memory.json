@@ -1,0 +1,639 @@
+{
+  "alpha": 10.0,
+  "counts": {
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|independent": {
+      "correct": 7,
+      "total": 29
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|independent": {
+      "correct": 39,
+      "total": 200
+    },
+    "agent_topic_stage|qwen3:8b|intermediate_algebra|independent": {
+      "correct": 14,
+      "total": 58
+    },
+    "agent_stage|qwen3:8b|independent": {
+      "correct": 79,
+      "total": 400
+    },
+    "global_stage|independent": {
+      "correct": 79,
+      "total": 400
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|independent": {
+      "correct": 7,
+      "total": 29
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|independent": {
+      "correct": 40,
+      "total": 200
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|post_debate": {
+      "correct": 7,
+      "total": 29
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|post_debate": {
+      "correct": 51,
+      "total": 200
+    },
+    "agent_topic_stage|qwen3:8b|intermediate_algebra|post_debate": {
+      "correct": 14,
+      "total": 58
+    },
+    "agent_stage|qwen3:8b|post_debate": {
+      "correct": 106,
+      "total": 400
+    },
+    "global_stage|post_debate": {
+      "correct": 106,
+      "total": 400
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|post_debate": {
+      "correct": 7,
+      "total": 29
+    },
+    "pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|post_debate": {
+      "correct": 55,
+      "total": 200
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|independent": {
+      "correct": 3,
+      "total": 21
+    },
+    "agent_topic_stage|qwen3:8b|number_theory|independent": {
+      "correct": 6,
+      "total": 42
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|independent": {
+      "correct": 3,
+      "total": 21
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|post_debate": {
+      "correct": 4,
+      "total": 21
+    },
+    "agent_topic_stage|qwen3:8b|number_theory|post_debate": {
+      "correct": 9,
+      "total": 42
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|post_debate": {
+      "correct": 5,
+      "total": 21
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|independent": {
+      "correct": 11,
+      "total": 51
+    },
+    "agent_topic_stage|qwen3:8b|algebra|independent": {
+      "correct": 23,
+      "total": 102
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|independent": {
+      "correct": 12,
+      "total": 51
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|post_debate": {
+      "correct": 13,
+      "total": 51
+    },
+    "agent_topic_stage|qwen3:8b|algebra|post_debate": {
+      "correct": 28,
+      "total": 102
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|post_debate": {
+      "correct": 15,
+      "total": 51
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|independent": {
+      "correct": 11,
+      "total": 31
+    },
+    "agent_topic_stage|qwen3:8b|prealgebra|independent": {
+      "correct": 22,
+      "total": 62
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|independent": {
+      "correct": 11,
+      "total": 31
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|post_debate": {
+      "correct": 15,
+      "total": 31
+    },
+    "agent_topic_stage|qwen3:8b|prealgebra|post_debate": {
+      "correct": 31,
+      "total": 62
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|post_debate": {
+      "correct": 16,
+      "total": 31
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|independent": {
+      "correct": 2,
+      "total": 22
+    },
+    "agent_topic_stage|qwen3:8b|counting_&_probability|independent": {
+      "correct": 4,
+      "total": 44
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|independent": {
+      "correct": 2,
+      "total": 22
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|post_debate": {
+      "correct": 5,
+      "total": 22
+    },
+    "agent_topic_stage|qwen3:8b|counting_&_probability|post_debate": {
+      "correct": 10,
+      "total": 44
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|post_debate": {
+      "correct": 5,
+      "total": 22
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|precalculus|independent": {
+      "correct": 1,
+      "total": 21
+    },
+    "agent_topic_stage|qwen3:8b|precalculus|independent": {
+      "correct": 2,
+      "total": 42
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|precalculus|independent": {
+      "correct": 1,
+      "total": 21
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|precalculus|post_debate": {
+      "correct": 2,
+      "total": 21
+    },
+    "agent_topic_stage|qwen3:8b|precalculus|post_debate": {
+      "correct": 4,
+      "total": 42
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|precalculus|post_debate": {
+      "correct": 2,
+      "total": 21
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|geometry|independent": {
+      "correct": 4,
+      "total": 25
+    },
+    "agent_topic_stage|qwen3:8b|geometry|independent": {
+      "correct": 8,
+      "total": 50
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|geometry|independent": {
+      "correct": 4,
+      "total": 25
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|geometry|post_debate": {
+      "correct": 5,
+      "total": 25
+    },
+    "agent_topic_stage|qwen3:8b|geometry|post_debate": {
+      "correct": 10,
+      "total": 50
+    },
+    "pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|geometry|post_debate": {
+      "correct": 5,
+      "total": 25
+    }
+  },
+  "candidate_counts": {
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|independent|A0": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|independent|A0": {
+      "correct": 39,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_agent_topic_stage|qwen3:8b|intermediate_algebra|independent|A0": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_agent_stage|qwen3:8b|independent|A0": {
+      "correct": 39,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_stage|independent|A0": {
+      "correct": 39,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_global|A0": {
+      "correct": 39,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|independent|B0": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|independent|B0": {
+      "correct": 40,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_agent_topic_stage|qwen3:8b|intermediate_algebra|independent|B0": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_agent_stage|qwen3:8b|independent|B0": {
+      "correct": 40,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_stage|independent|B0": {
+      "correct": 40,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_global|B0": {
+      "correct": 40,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|intermediate_algebra|post_debate|A1": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|post_debate|A1": {
+      "correct": 51,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_agent_topic_stage|qwen3:8b|intermediate_algebra|post_debate|A1": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_agent_stage|qwen3:8b|post_debate|A1": {
+      "correct": 51,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_stage|post_debate|A1": {
+      "correct": 51,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_global|A1": {
+      "correct": 51,
+      "total": 200,
+      "c2w_flip": 1,
+      "c2w_risk": 40
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|intermediate_algebra|post_debate|B1": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_pair_agent_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|post_debate|B1": {
+      "correct": 55,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_agent_topic_stage|qwen3:8b|intermediate_algebra|post_debate|B1": {
+      "correct": 7,
+      "total": 29,
+      "c2w_flip": 0,
+      "c2w_risk": 7
+    },
+    "cand_agent_stage|qwen3:8b|post_debate|B1": {
+      "correct": 55,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_stage|post_debate|B1": {
+      "correct": 55,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_global|B1": {
+      "correct": 55,
+      "total": 200,
+      "c2w_flip": 0,
+      "c2w_risk": 40
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|independent|A0": {
+      "correct": 3,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_agent_topic_stage|qwen3:8b|number_theory|independent|A0": {
+      "correct": 3,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|independent|B0": {
+      "correct": 3,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_agent_topic_stage|qwen3:8b|number_theory|independent|B0": {
+      "correct": 3,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|number_theory|post_debate|A1": {
+      "correct": 4,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_agent_topic_stage|qwen3:8b|number_theory|post_debate|A1": {
+      "correct": 4,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|number_theory|post_debate|B1": {
+      "correct": 5,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_agent_topic_stage|qwen3:8b|number_theory|post_debate|B1": {
+      "correct": 5,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 3
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|independent|A0": {
+      "correct": 11,
+      "total": 51,
+      "c2w_flip": 1,
+      "c2w_risk": 12
+    },
+    "cand_agent_topic_stage|qwen3:8b|algebra|independent|A0": {
+      "correct": 11,
+      "total": 51,
+      "c2w_flip": 1,
+      "c2w_risk": 12
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|independent|B0": {
+      "correct": 12,
+      "total": 51,
+      "c2w_flip": 0,
+      "c2w_risk": 12
+    },
+    "cand_agent_topic_stage|qwen3:8b|algebra|independent|B0": {
+      "correct": 12,
+      "total": 51,
+      "c2w_flip": 0,
+      "c2w_risk": 12
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|algebra|post_debate|A1": {
+      "correct": 13,
+      "total": 51,
+      "c2w_flip": 1,
+      "c2w_risk": 12
+    },
+    "cand_agent_topic_stage|qwen3:8b|algebra|post_debate|A1": {
+      "correct": 13,
+      "total": 51,
+      "c2w_flip": 1,
+      "c2w_risk": 12
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|algebra|post_debate|B1": {
+      "correct": 15,
+      "total": 51,
+      "c2w_flip": 0,
+      "c2w_risk": 12
+    },
+    "cand_agent_topic_stage|qwen3:8b|algebra|post_debate|B1": {
+      "correct": 15,
+      "total": 51,
+      "c2w_flip": 0,
+      "c2w_risk": 12
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|independent|A0": {
+      "correct": 11,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_agent_topic_stage|qwen3:8b|prealgebra|independent|A0": {
+      "correct": 11,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|independent|B0": {
+      "correct": 11,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_agent_topic_stage|qwen3:8b|prealgebra|independent|B0": {
+      "correct": 11,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|prealgebra|post_debate|A1": {
+      "correct": 15,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_agent_topic_stage|qwen3:8b|prealgebra|post_debate|A1": {
+      "correct": 15,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|prealgebra|post_debate|B1": {
+      "correct": 16,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_agent_topic_stage|qwen3:8b|prealgebra|post_debate|B1": {
+      "correct": 16,
+      "total": 31,
+      "c2w_flip": 0,
+      "c2w_risk": 11
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|independent|A0": {
+      "correct": 2,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_agent_topic_stage|qwen3:8b|counting_&_probability|independent|A0": {
+      "correct": 2,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|independent|B0": {
+      "correct": 2,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_agent_topic_stage|qwen3:8b|counting_&_probability|independent|B0": {
+      "correct": 2,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|counting_&_probability|post_debate|A1": {
+      "correct": 5,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_agent_topic_stage|qwen3:8b|counting_&_probability|post_debate|A1": {
+      "correct": 5,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|counting_&_probability|post_debate|B1": {
+      "correct": 5,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_agent_topic_stage|qwen3:8b|counting_&_probability|post_debate|B1": {
+      "correct": 5,
+      "total": 22,
+      "c2w_flip": 0,
+      "c2w_risk": 2
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|precalculus|independent|A0": {
+      "correct": 1,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_agent_topic_stage|qwen3:8b|precalculus|independent|A0": {
+      "correct": 1,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|precalculus|independent|B0": {
+      "correct": 1,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_agent_topic_stage|qwen3:8b|precalculus|independent|B0": {
+      "correct": 1,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|precalculus|post_debate|A1": {
+      "correct": 2,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_agent_topic_stage|qwen3:8b|precalculus|post_debate|A1": {
+      "correct": 2,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|precalculus|post_debate|B1": {
+      "correct": 2,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_agent_topic_stage|qwen3:8b|precalculus|post_debate|B1": {
+      "correct": 2,
+      "total": 21,
+      "c2w_flip": 0,
+      "c2w_risk": 1
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|geometry|independent|A0": {
+      "correct": 4,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_agent_topic_stage|qwen3:8b|geometry|independent|A0": {
+      "correct": 4,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|geometry|independent|B0": {
+      "correct": 4,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_agent_topic_stage|qwen3:8b|geometry|independent|B0": {
+      "correct": 4,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__A|geometry|post_debate|A1": {
+      "correct": 5,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_agent_topic_stage|qwen3:8b|geometry|post_debate|A1": {
+      "correct": 5,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_pair_agent_topic_stage|qwen3_8b_A__qwen3_8b_B|qwen3_8b_A__qwen3_8b_B__B|geometry|post_debate|B1": {
+      "correct": 5,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    },
+    "cand_agent_topic_stage|qwen3:8b|geometry|post_debate|B1": {
+      "correct": 5,
+      "total": 25,
+      "c2w_flip": 0,
+      "c2w_risk": 4
+    }
+  }
+}

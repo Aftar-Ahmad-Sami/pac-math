@@ -1,0 +1,7 @@
+method_a,method_b,both_correct,a_correct_b_wrong,a_wrong_b_correct,both_wrong,discordant_pairs,statistic,pvalue,note,pvalue_holm,reject_holm_0p05
+pac_math_pair_topic_stage,stateless_debate,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False
+pac_math_pair_topic_stage,4cand_majority,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False
+pac_math_pair_topic_stage,4cand_confidence,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False
+pac_math_pair_topic_stage,overall_reliability,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False
+pac_math_pair_topic_stage,agent_topic_reliability,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False
+pac_math_pair_topic_stage,pac_math_pair_topic_stage,6,0,0,10,0,0.0,1.0,no_discordant_pairs,1.0,False

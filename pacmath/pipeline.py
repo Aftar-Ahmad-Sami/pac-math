@@ -116,7 +116,14 @@ def _request_json(
     for attempt in range(max_retries + 1):
         use_prompt = prompt
         if attempt > 0:
-            use_prompt = prompt + "\n\nYour previous response was not valid JSON. Return valid JSON only."
+            use_prompt = (
+                prompt
+                + "\n\nYour previous response was not valid JSON. Return exactly one minified JSON object only. "
+                + "Do not include reasoning, markdown, code fences, <think> blocks, or any text outside the JSON object."
+            )
+
+        # First try Ollama JSON mode. Some models obey it; some reasoning-heavy
+        # models still leak text around the object, which safe_json_loads repairs.
         resp = client.generate(model=model, prompt=use_prompt, system=system, options=options, json_mode=True)
         last_text = resp.text
         token_info = {
@@ -132,6 +139,30 @@ def _request_json(
             parsed["_tokens"] = token_info
             parsed["_attempts"] = attempt + 1
             return parsed
+
+        # Final fallback on the last attempt: call without Ollama format=json.
+        # This helps models whose JSON mode produces malformed/empty output.
+        if attempt == max_retries:
+            fallback_prompt = (
+                use_prompt
+                + "\n\nReturn only the JSON object now. The first character must be { and the last character must be }."
+            )
+            resp2 = client.generate(model=model, prompt=fallback_prompt, system=system, options=options, json_mode=False)
+            last_text = resp2.text
+            token_info = {
+                "prompt_tokens": resp2.prompt_eval_count,
+                "completion_tokens": resp2.eval_count,
+                "total_tokens": resp2.total_tokens,
+                "duration_ns": resp2.total_duration,
+            }
+            parsed = safe_json_loads(resp2.text)
+            if parsed is not None:
+                parsed["_parse_ok"] = True
+                parsed["_raw_response"] = last_text
+                parsed["_tokens"] = token_info
+                parsed["_attempts"] = attempt + 2
+                parsed["_json_repair_fallback"] = True
+                return parsed
     return {
         "_parse_ok": False,
         "_raw_response": last_text,

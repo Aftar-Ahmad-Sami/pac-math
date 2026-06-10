@@ -15,7 +15,35 @@ def _cand_by_id(candidates: List[Dict[str, Any]], cid: str) -> Dict[str, Any]:
     raise KeyError(cid)
 
 
+def _is_valid_candidate(c: Dict[str, Any]) -> bool:
+    """Candidate is eligible for selectors that compare answer content.
+
+    Parse failures must not become a majority answer such as PARSE_ERROR.
+    Single-agent baselines still expose parse failures, but multi-candidate
+    selectors should ignore invalid candidates whenever any valid candidate is
+    available.
+    """
+    if not bool(c.get("parse_ok", True)):
+        return False
+    ans = str(c.get("answer", "")).strip().lower()
+    if ans in {"", "parse_error", "error", "none", "null"}:
+        return False
+    norm = str(c.get("normalized_answer", "")).strip().lower()
+    if norm in {"", "parse_error", "parseerror", "error", "none", "null"}:
+        return False
+    return True
+
+
+def _eligible(candidates: List[Dict[str, Any]], allow_invalid_if_all_bad: bool = True) -> List[Dict[str, Any]]:
+    valid = [c for c in candidates if _is_valid_candidate(c)]
+    if valid or not allow_invalid_if_all_bad:
+        return valid
+    return list(candidates)
+
+
 def _norm(c: Dict[str, Any]) -> str:
+    if not _is_valid_candidate(c):
+        return ""
     return str(c.get("normalized_answer", canonicalize(c.get("answer", "")).normalized))
 
 
@@ -35,34 +63,47 @@ def choose_single_b(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
 
 
 def choose_stateless_debate(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Standard post-debate baseline: only A1/B1 are eligible."""
+    """Standard post-debate baseline: only A1/B1 are eligible.
+
+    If one post-debate response failed parsing, use the other valid post-debate
+    response. If both failed, fall back to the original A1/B1 confidence rule so
+    the parse failure is visible as a model failure.
+    """
     a1 = _cand_by_id(candidates, "A1")
     b1 = _cand_by_id(candidates, "B1")
-    if _norm(a1) and _norm(a1) == _norm(b1):
-        return a1
+    valid_post = _eligible([a1, b1], allow_invalid_if_all_bad=False)
+    if len(valid_post) == 1:
+        return valid_post[0]
+    if len(valid_post) == 2:
+        if _norm(valid_post[0]) and _norm(valid_post[0]) == _norm(valid_post[1]):
+            return valid_post[0]
+        return valid_post[0] if _confidence(valid_post[0]) >= _confidence(valid_post[1]) else valid_post[1]
     return a1 if _confidence(a1) >= _confidence(b1) else b1
 
 
 def choose_4cand_majority(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
-    counts = Counter(_norm(c) for c in candidates if _norm(c))
+    eligible = _eligible(candidates)
+    counts = Counter(_norm(c) for c in eligible if _norm(c))
     if not counts:
-        return candidates[0]
+        return eligible[0]
     best_norm, _ = counts.most_common(1)[0]
-    tied = [c for c in candidates if _norm(c) == best_norm]
+    tied = [c for c in eligible if _norm(c) == best_norm]
     # Within majority answer, choose highest confidence; stable order breaks remaining ties.
     tied = sorted(tied, key=lambda c: (_confidence(c), 1 if c.get("stage") == "independent" else 0), reverse=True)
     return tied[0]
 
 
 def choose_4cand_confidence(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
-    return sorted(candidates, key=lambda c: (_confidence(c), 1 if c.get("stage") == "independent" else 0), reverse=True)[0]
+    eligible = _eligible(candidates)
+    return sorted(eligible, key=lambda c: (_confidence(c), 1 if c.get("stage") == "independent" else 0), reverse=True)[0]
 
 
 def choose_oracle(candidates: List[Dict[str, Any]]) -> Dict[str, Any]:
     for c in candidates:
-        if bool(c.get("is_correct", False)):
+        if _is_valid_candidate(c) and bool(c.get("is_correct", False)):
             return c
-    return candidates[0]
+    eligible = _eligible(candidates)
+    return eligible[0]
 
 
 def _score_candidate(
@@ -98,6 +139,7 @@ def choose_reliability(
     This is the original PAC selector: each A0/B0/A1/B1 candidate receives
     a historical reliability score. The highest-scoring candidate is selected.
     """
+    candidates = _eligible(candidates)
     scored: List[Tuple[float, float, int, int, Dict[str, Any], Dict[str, Any]]] = []
     for idx, c in enumerate(candidates):
         info = _score_candidate(c, memory, pair_id, topic, mode)
@@ -149,6 +191,7 @@ def choose_reliability_support_sum(
     distinguishes candidate preservation, candidate-level reliability, and
     answer-level support aggregation.
     """
+    candidates = _eligible(candidates)
     answer_scores: Dict[str, float] = defaultdict(float)
     answer_candidates: Dict[str, List[Tuple[Dict[str, Any], Dict[str, Any], float]]] = defaultdict(list)
 
@@ -259,7 +302,7 @@ def choose_independent_reliability(
     post-debate selectors, debate is adding persuasion risk that selection is
     not yet controlling.
     """
-    eligible = [_cand_by_id(candidates, "A0"), _cand_by_id(candidates, "B0")]
+    eligible = _eligible([_cand_by_id(candidates, "A0"), _cand_by_id(candidates, "B0")])
     return choose_reliability(eligible, memory, pair_id, topic, mode)
 
 
@@ -278,6 +321,7 @@ def choose_candidate_safety(
     These methods are not allowed to use test labels. They use only the frozen
     candidate-policy statistics built from calibration records.
     """
+    candidates = _eligible(candidates)
     scored = []
     for idx, c in enumerate(candidates):
         info = memory.score_candidate_safety(

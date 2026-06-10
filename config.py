@@ -32,25 +32,14 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 # llama3.1:8b, qwen3:8b, gemma4:26b, gemma4:31b
 # Your RTX 2000 Ada has 16 GB VRAM. gemma4:26b/31b may be slow or may spill to CPU.
 # Start with qwen3:8b and llama3.1:8b. Add gemma only after the pipeline works.
-# MODEL_PAIRS = [
-#     {
-#         "pair_id": "qwen3_8b__phi4_14b_standard_v16",
-#         "agent_a_model": "qwen3:8b",
-#         "agent_b_model": "phi4:14b",
-#     },
-#     {
-#         "pair_id": "phi4_14b__qwen3_8b_standard_v16",
-#         "agent_a_model": "phi4:14b",
-#         "agent_b_model": "qwen3:8b",
-#     },
-# ]
-
 MODEL_PAIRS = [
-    {
-        "pair_id": "qwen36_27b__phi4_14b_standard_v16",
-        "agent_a_model": "qwen3.6:27b",
-        "agent_b_model": "phi4:14b",
-    },
+    # v17 pilot target: Qwen 27B needs JSON repair and invalid-candidate filtering.
+    # Run pilot first. Do not run full until parse_ok is fixed for A0/A1.
+    {"pair_id": "qwen36_27b__phi4_14b_standard_v17", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
+
+    # Already completed v16 main pairs. Keep disabled unless intentionally recomputing.
+    # {"pair_id": "qwen3_8b__phi4_14b_standard_v16", "agent_a_model": "qwen3:8b", "agent_b_model": "phi4:14b"},
+    # {"pair_id": "phi4_14b__qwen3_8b_standard_v16", "agent_a_model": "phi4:14b", "agent_b_model": "qwen3:8b"},
 ]
 
 # Generation settings. Keep temperature low for reproducibility.
@@ -64,7 +53,7 @@ GENERATION_OPTIONS = {
 
 # Debate and parsing
 DEBATE_ROUNDS = 2  # implemented as critique round + revision round
-MAX_JSON_RETRIES = 1
+MAX_JSON_RETRIES = 2
 
 # Reliability smoothing
 ALPHA = 10.0
@@ -82,7 +71,7 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v16"
+PROTOCOL_VERSION = "standard_debate_v17_json_repair"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5
@@ -120,28 +109,3 @@ EVIDENCE_GATED_DEBATE = False
 MIN_CHANGE_JUSTIFICATION_SCORE = 70.0
 MIN_REVISED_VALIDITY_SCORE = 60.0
 MAX_INITIAL_VALIDITY_FOR_CHANGE = 65.0
-
-
-MAIN_METHODS = [
-    "single_A",
-    "single_B",
-    "stateless_debate",
-    "4cand_majority",
-    "pac_math_pair_topic_stage",
-    "pac_math_adaptive_learned",
-    "pac_math_router_safety",
-    "oracle_candidate",
-]
-
-APPENDIX_METHODS = [
-    "4cand_confidence",
-    "overall_reliability",
-    "agent_topic_reliability",
-    "pac_math_anchor_gate",
-    "pac_math_cross_stage_support",
-    "pac_math_cross_agent_anchor_gate",
-    "pac_math_pair_topic_stage_support_sum",
-    "pac_math_router_balanced",
-    "pac_math_router_accuracy",
-    "pac_math_safety_first",
-]

@@ -4,7 +4,7 @@ pac_math_router_balanced,4cand_majority,305,105,23,567,128,51.2578125,8.09977424
 pac_math_router_balanced,4cand_confidence,195,215,35,555,250,128.164,1.0334111627511808e-29,ok,1.9634812092272436e-28,True
 pac_math_router_balanced,overall_reliability,400,10,10,580,20,0.05,0.8230632737581214,ok,1.0,False
 pac_math_router_balanced,agent_topic_reliability,403,7,7,583,14,0.07142857142857142,0.7892680261342813,ok,1.0,False
-pac_math_router_balanced,pac_math_pair_topic_stage_support_sum,339,71,15,575,86,35.174418604651166,3.0145759627591457e-09,ok,4.5218639441387185e-08,True
+pac_math_router_balanced,pac_math_pair_topic_stage_support_sum,339,71,15,575,86,35.174418604651166,3.014575962759146e-09,ok,4.521863944138719e-08,True
 pac_math_router_balanced,pac_math_pair_topic_stage_guard,403,7,7,583,14,0.07142857142857142,0.7892680261342813,ok,1.0,False
 pac_math_router_balanced,pac_math_independent_only,192,218,36,554,254,128.98031496062993,6.849432246689375e-30,ok,1.369886449337875e-28,True
 pac_math_router_balanced,pac_math_safety_first,350,60,36,554,96,5.510416666666667,0.01890354301112133,ok,0.22684251613345596,False

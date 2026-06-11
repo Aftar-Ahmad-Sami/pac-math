@@ -1,4 +1,3 @@
-
 #!/bin/bash
 
 #SBATCH -J pacmath_pilot
@@ -30,3 +29,7 @@ sleep 5
 
 # ? Run your script
 python -u scripts/run_pilot.py
+python -u scripts/summarize_results.py
+python -u scripts/diagnose_experiment.py
+python -u scripts/audit_experiment.py
+python -u scripts/export_main_tables.py

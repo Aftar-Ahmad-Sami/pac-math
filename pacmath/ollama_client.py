@@ -26,6 +26,18 @@ class OllamaClient:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
 
+    def _post_ollama(self, endpoint: str, payload: Dict[str, Any]) -> tuple[Dict[str, Any], float]:
+        start = time.time()
+        resp = requests.post(
+            f"{self.base_url}{endpoint}",
+            json=payload,
+            timeout=self.timeout_seconds,
+        )
+        elapsed = time.time() - start
+        if resp.status_code != 200:
+            raise RuntimeError(f"Ollama HTTP {resp.status_code}: {resp.text[:1000]}")
+        return resp.json(), elapsed
+
     def generate(
         self,
         model: str,
@@ -33,6 +45,7 @@ class OllamaClient:
         system: str = "",
         options: Optional[Dict[str, Any]] = None,
         json_mode: bool = False,
+        think: Optional[bool] = None,
     ) -> OllamaResponse:
         payload: Dict[str, Any] = {
             "model": model,
@@ -45,19 +58,61 @@ class OllamaClient:
             payload["options"] = options
         if json_mode:
             payload["format"] = "json"
+        # Newer Ollama builds support a top-level think flag for thinking models.
+        # Older builds ignore unknown fields or may reject them; if rejected, users
+        # should disable this in config. It helps Qwen-style reasoning models return
+        # a final answer rather than empty final content.
+        if think is not None:
+            payload["think"] = bool(think)
 
-        start = time.time()
-        resp = requests.post(
-            f"{self.base_url}/api/generate",
-            json=payload,
-            timeout=self.timeout_seconds,
-        )
-        elapsed = time.time() - start
-        if resp.status_code != 200:
-            raise RuntimeError(f"Ollama HTTP {resp.status_code}: {resp.text[:1000]}")
-        data = resp.json()
+        data, elapsed = self._post_ollama("/api/generate", payload)
+        text = data.get("response", "")
+        # Defensive extraction for future/variant response shapes.
+        if not text and isinstance(data.get("message"), dict):
+            text = data.get("message", {}).get("content", "") or ""
+        if not text:
+            text = data.get("content", "") or ""
+
         return OllamaResponse(
-            text=data.get("response", ""),
+            text=text,
+            prompt_eval_count=int(data.get("prompt_eval_count", 0) or 0),
+            eval_count=int(data.get("eval_count", 0) or 0),
+            total_duration=int(data.get("total_duration", 0) or int(elapsed * 1e9)),
+            raw=data,
+        )
+
+    def chat(
+        self,
+        model: str,
+        prompt: str,
+        system: str = "",
+        options: Optional[Dict[str, Any]] = None,
+        json_mode: bool = False,
+        think: Optional[bool] = None,
+    ) -> OllamaResponse:
+        messages = []
+        if system:
+            messages.append({"role": "system", "content": system})
+        messages.append({"role": "user", "content": prompt})
+
+        payload: Dict[str, Any] = {
+            "model": model,
+            "messages": messages,
+            "stream": False,
+        }
+        if options:
+            payload["options"] = options
+        if json_mode:
+            payload["format"] = "json"
+        if think is not None:
+            payload["think"] = bool(think)
+
+        data, elapsed = self._post_ollama("/api/chat", payload)
+        msg = data.get("message", {}) if isinstance(data.get("message"), dict) else {}
+        text = msg.get("content", "") or data.get("response", "") or data.get("content", "") or ""
+
+        return OllamaResponse(
+            text=text,
             prompt_eval_count=int(data.get("prompt_eval_count", 0) or 0),
             eval_count=int(data.get("eval_count", 0) or 0),
             total_duration=int(data.get("total_duration", 0) or int(elapsed * 1e9)),

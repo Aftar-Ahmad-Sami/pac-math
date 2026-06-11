@@ -35,7 +35,7 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 MODEL_PAIRS = [
     # v17 pilot target: Qwen 27B needs JSON repair and invalid-candidate filtering.
     # Run pilot first. Do not run full until parse_ok is fixed for A0/A1.
-    {"pair_id": "qwen36_27b__phi4_14b_standard_v17", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
+    {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
 
     # Already completed v16 main pairs. Keep disabled unless intentionally recomputing.
     # {"pair_id": "qwen3_8b__phi4_14b_standard_v16", "agent_a_model": "qwen3:8b", "agent_b_model": "phi4:14b"},
@@ -50,6 +50,14 @@ GENERATION_OPTIONS = {
     "num_predict": 700,
     "seed": 42,
 }
+
+
+# v18 Ollama compatibility controls. Qwen-style reasoning models can return
+# empty final content through /api/generate. Disable thinking when supported and
+# fall back to /api/chat before marking a candidate as PARSE_ERROR.
+OLLAMA_DISABLE_THINKING = True
+OLLAMA_CHAT_FALLBACK = True
+OLLAMA_PREFER_CHAT = True
 
 # Debate and parsing
 DEBATE_ROUNDS = 2  # implemented as critique round + revision round
@@ -71,7 +79,7 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v17_json_repair"
+PROTOCOL_VERSION = "standard_debate_v19_chat_think_false"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5

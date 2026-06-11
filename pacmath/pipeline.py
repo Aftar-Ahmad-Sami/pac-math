@@ -111,8 +111,105 @@ def _request_json(
     options: Dict[str, Any],
     max_retries: int,
 ) -> Dict[str, Any]:
+    """Request one JSON object with robust fallbacks.
+
+    v19 prioritizes /api/chat with top-level think=False for Qwen-style reasoning models.
+    The debug log showed qwen3.6:27b returns empty message.content and long
+    message.thinking unless think=False is set. With think=False, /api/chat returns
+    valid JSON in message.content. /api/generate is retained only as fallback.
+
+    The returned object always carries a compact request trace so blank-output
+    failures are inspectable instead of becoming opaque PARSE_ERROR records.
+    """
+    try:
+        import config as _cfg
+        disable_thinking = bool(getattr(_cfg, "OLLAMA_DISABLE_THINKING", True))
+        use_chat_fallback = bool(getattr(_cfg, "OLLAMA_CHAT_FALLBACK", True))
+        prefer_chat = bool(getattr(_cfg, "OLLAMA_PREFER_CHAT", True))
+    except Exception:
+        disable_thinking = True
+        use_chat_fallback = True
+        prefer_chat = True
+
+    think_value = False if disable_thinking else None
+    trace: List[Dict[str, Any]] = []
     last_text = ""
     token_info = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "duration_ns": 0}
+
+    def _record_trace(kind: str, json_mode: bool, resp: Any = None, error: str = "") -> None:
+        text = getattr(resp, "text", "") if resp is not None else ""
+        raw = getattr(resp, "raw", None) if resp is not None else None
+        item: Dict[str, Any] = {
+            "kind": kind,
+            "json_mode": bool(json_mode),
+            "text_len": len(text or ""),
+            "text_head": (text or "")[:500],
+            "error": error,
+        }
+        if isinstance(raw, dict):
+            item["raw_keys"] = sorted(list(raw.keys()))
+            for key in ["done", "done_reason", "model", "created_at", "prompt_eval_count", "eval_count"]:
+                if key in raw:
+                    item[key] = raw.get(key)
+            # Some future Ollama/build variants may expose content/thinking in different fields.
+            if isinstance(raw.get("message"), dict):
+                item["message_keys"] = sorted(list(raw["message"].keys()))
+                msg_content = raw["message"].get("content", "") or ""
+                item["message_content_len"] = len(msg_content)
+                item["message_content_head"] = msg_content[:500]
+            if "response" in raw:
+                item["response_len"] = len(raw.get("response") or "")
+            if "thinking" in raw:
+                think_text = raw.get("thinking") or ""
+                item["thinking_len"] = len(think_text)
+                item["thinking_head"] = str(think_text)[:500]
+        trace.append(item)
+
+    def _try_parse(kind: str, use_prompt: str, json_mode: bool) -> Optional[Dict[str, Any]]:
+        nonlocal last_text, token_info
+        try:
+            if kind == "generate":
+                resp = client.generate(
+                    model=model,
+                    prompt=use_prompt,
+                    system=system,
+                    options=options,
+                    json_mode=json_mode,
+                    think=think_value,
+                )
+            elif kind == "chat":
+                resp = client.chat(
+                    model=model,
+                    prompt=use_prompt,
+                    system=system,
+                    options=options,
+                    json_mode=json_mode,
+                    think=think_value,
+                )
+            else:
+                raise ValueError(f"Unknown request kind: {kind}")
+        except Exception as exc:
+            _record_trace(kind, json_mode, None, error=repr(exc))
+            return None
+
+        last_text = resp.text or ""
+        token_info = {
+            "prompt_tokens": resp.prompt_eval_count,
+            "completion_tokens": resp.eval_count,
+            "total_tokens": resp.total_tokens,
+            "duration_ns": resp.total_duration,
+        }
+        _record_trace(kind, json_mode, resp)
+        parsed = safe_json_loads(last_text)
+        if parsed is not None:
+            parsed["_parse_ok"] = True
+            parsed["_raw_response"] = last_text
+            parsed["_tokens"] = token_info
+            parsed["_attempts"] = len(trace)
+            parsed["_request_trace"] = trace
+            return parsed
+        return None
+
     for attempt in range(max_retries + 1):
         use_prompt = prompt
         if attempt > 0:
@@ -122,52 +219,37 @@ def _request_json(
                 + "Do not include reasoning, markdown, code fences, <think> blocks, or any text outside the JSON object."
             )
 
-        # First try Ollama JSON mode. Some models obey it; some reasoning-heavy
-        # models still leak text around the object, which safe_json_loads repairs.
-        resp = client.generate(model=model, prompt=use_prompt, system=system, options=options, json_mode=True)
-        last_text = resp.text
-        token_info = {
-            "prompt_tokens": resp.prompt_eval_count,
-            "completion_tokens": resp.eval_count,
-            "total_tokens": resp.total_tokens,
-            "duration_ns": resp.total_duration,
-        }
-        parsed = safe_json_loads(resp.text)
-        if parsed is not None:
-            parsed["_parse_ok"] = True
-            parsed["_raw_response"] = last_text
-            parsed["_tokens"] = token_info
-            parsed["_attempts"] = attempt + 1
-            return parsed
+        request_order = []
+        if prefer_chat and use_chat_fallback:
+            request_order.extend([
+                ("chat", use_prompt, True, {"_chat_primary": True}),
+                ("chat", use_prompt + "\n\nReturn only the JSON object. The first character must be { and the last must be }.", False, {"_chat_primary": True, "_json_repair_fallback": True}),
+                ("generate", use_prompt, True, {"_generate_fallback": True}),
+                ("generate", use_prompt + "\n\nReturn only the JSON object. The first character must be { and the last must be }.", False, {"_generate_fallback": True, "_json_repair_fallback": True}),
+            ])
+        else:
+            request_order.extend([
+                ("generate", use_prompt, True, {}),
+                ("generate", use_prompt + "\n\nReturn only the JSON object. The first character must be { and the last must be }.", False, {"_json_repair_fallback": True}),
+            ])
+            if use_chat_fallback:
+                request_order.extend([
+                    ("chat", use_prompt, True, {"_chat_fallback": True}),
+                    ("chat", use_prompt + "\n\nReturn only the JSON object. The first character must be { and the last must be }.", False, {"_chat_fallback": True, "_json_repair_fallback": True}),
+                ])
 
-        # Final fallback on the last attempt: call without Ollama format=json.
-        # This helps models whose JSON mode produces malformed/empty output.
-        if attempt == max_retries:
-            fallback_prompt = (
-                use_prompt
-                + "\n\nReturn only the JSON object now. The first character must be { and the last character must be }."
-            )
-            resp2 = client.generate(model=model, prompt=fallback_prompt, system=system, options=options, json_mode=False)
-            last_text = resp2.text
-            token_info = {
-                "prompt_tokens": resp2.prompt_eval_count,
-                "completion_tokens": resp2.eval_count,
-                "total_tokens": resp2.total_tokens,
-                "duration_ns": resp2.total_duration,
-            }
-            parsed = safe_json_loads(resp2.text)
+        for kind, req_prompt, json_mode, flags in request_order:
+            parsed = _try_parse(kind, req_prompt, json_mode=json_mode)
             if parsed is not None:
-                parsed["_parse_ok"] = True
-                parsed["_raw_response"] = last_text
-                parsed["_tokens"] = token_info
-                parsed["_attempts"] = attempt + 2
-                parsed["_json_repair_fallback"] = True
+                parsed.update(flags)
                 return parsed
+
     return {
         "_parse_ok": False,
         "_raw_response": last_text,
         "_tokens": token_info,
-        "_attempts": max_retries + 1,
+        "_attempts": len(trace),
+        "_request_trace": trace,
     }
 
 
@@ -199,6 +281,7 @@ def solve_independent(
         "raw_response": parsed.get("_raw_response", ""),
         "tokens": parsed.get("_tokens", {}),
         "attempts": parsed.get("_attempts", 0),
+        "request_trace": parsed.get("_request_trace", []),
     }
 
 
@@ -314,6 +397,7 @@ def run_debate(
                 "raw_response": revision.get("_raw_response", ""),
                 "tokens": revision.get("_tokens", {}),
                 "attempts": revision.get("_attempts", 0),
+                "request_trace": revision.get("_request_trace", []),
                 "evidence_gate_note": "standard_debate_revision_accepted_without_commitment_gate",
             }
 
@@ -396,6 +480,7 @@ def run_debate(
             "raw_response": revision.get("_raw_response", ""),
             "tokens": revision.get("_tokens", {}),
             "attempts": revision.get("_attempts", 0),
+            "request_trace": revision.get("_request_trace", []),
             "evidence_gate_note": "commitment_missing_or_disabled_revision_hard_guard_only",
         }
 

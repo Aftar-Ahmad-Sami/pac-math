@@ -88,5 +88,15 @@ def subset_rows(rows: List[Dict[str, Any]], n: Optional[int]) -> List[Dict[str, 
 
 
 def rows_to_csv(path: Path, rows: List[Dict[str, Any]]) -> None:
+    """Write a one-physical-line-per-row CSV for downstream scripts.
+
+    Some model fields may contain embedded newlines.  Pandas can quote them, but
+    then wc/line-based sanity checks become misleading.  Sanitizing text fields
+    keeps the generated CSV easier to audit and prevents stale mixed CSVs from
+    hiding behind valid JSONL files.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(rows).to_csv(path, index=False)
+    df = pd.DataFrame(rows)
+    for col in df.select_dtypes(include=["object"]).columns:
+        df[col] = df[col].map(lambda x: re.sub(r"\s+", " ", x).strip() if isinstance(x, str) else x)
+    df.to_csv(path, index=False, lineterminator="\n")

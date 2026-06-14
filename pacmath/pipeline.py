@@ -36,6 +36,9 @@ def _protocol_metadata() -> Dict[str, Any]:
             "min_revised_validity_score": float(getattr(_cfg, "MIN_REVISED_VALIDITY_SCORE", 60.0)),
             "max_initial_validity_for_change": float(getattr(_cfg, "MAX_INITIAL_VALIDITY_FOR_CHANGE", 65.0)),
             "generation_options": dict(getattr(_cfg, "GENERATION_OPTIONS", {})),
+            "nvidia_enable_thinking": bool(getattr(_cfg, "NVIDIA_ENABLE_THINKING", False)),
+            "nvidia_reasoning_budget": int(getattr(_cfg, "NVIDIA_REASONING_BUDGET", 0)),
+            "nvidia_rate_limit_rpm": float(getattr(_cfg, "NVIDIA_RATE_LIMIT_RPM", 0.0)),
         }
     except Exception:
         return {"protocol_version": "unknown_protocol"}
@@ -157,6 +160,9 @@ def _request_json(
                 msg_content = raw["message"].get("content", "") or ""
                 item["message_content_len"] = len(msg_content)
                 item["message_content_head"] = msg_content[:500]
+                if "reasoning_content_len" in raw["message"]:
+                    item["reasoning_content_len"] = raw["message"].get("reasoning_content_len")
+                    item["reasoning_content_head"] = raw["message"].get("reasoning_content_head", "")
             if "response" in raw:
                 item["response_len"] = len(raw.get("response") or "")
             if "thinking" in raw:

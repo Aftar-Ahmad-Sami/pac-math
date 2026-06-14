@@ -1,30 +1,87 @@
-# PAC-Math v16 Standard Debate Recovery Run
+# PAC-Math v20: NVIDIA API Endpoint Support
 
-This version is the next required experiment after v15.
+This version adds a mixed-provider model client so PAC-Math can run local Ollama
+models and NVIDIA OpenAI-compatible API models in the same debate pair.
 
-Why this change is needed:
-- v15 evidence gating reduced useful post-debate candidate diversity.
-- In the v15 full run, A1/B1 were barely better than A0/B0, so selectors had little room to work.
-- Earlier standard Phi-4 pilot had much stronger post-debate candidates, so the next valid step is to rerun standard debate with protocol-version cache protection.
+Main new pair in `config.py`:
 
-Important code fixes:
-1. `EVIDENCE_GATED_DEBATE = False` and `PROTOCOL_VERSION = "standard_debate_v16"`.
-2. New pair id: `qwen3_8b__phi4_14b_standard_v16`, so old evidence-gated cache is not reused.
-3. Fixed standard-debate finalization. In v15, standard mode still called the evidence-gate guard and silently rejected normal revisions. v16 accepts parsed revised answers directly when the evidence gate is disabled.
-4. Added protocol/evidence-gate audit output.
-5. Suppressed noisy SymPy SyntaxWarnings during answer normalization.
+```python
+MODEL_PAIRS = [
+    {
+        "pair_id": "gemma4_31b__nemotron3_ultra_550b_standard_v20",
+        "agent_a_model": "gemma4:31b",
+        "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
+    },
+    {
+        "pair_id": "nemotron3_ultra_550b__gemma4_31b_standard_v20",
+        "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "agent_b_model": "gemma4:31b",
+    },
+]
+```
 
-Run:
+## Setup
 
 ```bash
-conda activate pac-math
-python scripts/run_full.py
+pip install -r requirements.txt
+export NVIDIA_API_KEY="your_key_here"
+```
+
+or create a local `.env` file:
+
+```bash
+NVIDIA_API_KEY=your_key_here
+```
+
+## NVIDIA controls
+
+`config.py` contains:
+
+```python
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_RATE_LIMIT_RPM = 38.0
+NVIDIA_STREAM = True
+NVIDIA_ENABLE_THINKING = False
+NVIDIA_REASONING_BUDGET = 0
+PRIMARY_METHOD = "pac_math_pair_topic_stage"
+```
+
+The main controlled experiment keeps native hidden thinking disabled. This keeps
+Ollama and NVIDIA models under the same observable JSON-output protocol. If you
+want a native-thinking ablation later, set `NVIDIA_ENABLE_THINKING = True` and
+use a separate protocol version.
+
+## Test the NVIDIA endpoint first
+
+```bash
+python scripts/debug_nvidia_api.py
+```
+
+Expected: parseable JSON and `NVIDIA API test OK`.
+
+## Recommended run order
+
+```bash
+python scripts/run_pilot.py
 python scripts/summarize_results.py
 python scripts/diagnose_experiment.py
 python scripts/audit_experiment.py
+python scripts/export_main_tables.py
 ```
 
-What to check:
-- In `audit_experiment.py`, the full record audit should show `protocol_versions: ['standard_debate_v16']` and `evidence_gated_debate: ['False']`.
-- Candidate quality should recover compared with evidence-gated v15, especially A1/B1 correct rates.
-- Main comparison: `stateless_debate`, `4cand_majority`, `pac_math_cross_agent_anchor_gate`, `pac_math_adaptive_learned`, `oracle_candidate`.
+Run full only if pilot passes:
+
+- all A0/B0/A1/B1 parse rates are near 1.0;
+- candidate oracle possible is high enough;
+- `pac_math_pair_topic_stage` beats or matches `stateless_debate` accuracy;
+- `pac_math_pair_topic_stage` reduces C2W relative to `stateless_debate`.
+
+## Main changes
+
+1. Added `NvidiaClient` using the OpenAI SDK and NVIDIA base URL.
+2. Added process-local rate limiting for hosted API calls.
+3. Added `MultiProviderClient` to route `nvidia/...` models to NVIDIA and all other models to Ollama.
+4. Kept PAC-Math parsing over visible `.content`, not hidden `reasoning_content`.
+5. Added `scripts/debug_nvidia_api.py`.
+6. Made CSV writing one-physical-line-per-row to avoid stale/mixed output confusion.
+7. Set `PRIMARY_METHOD = "pac_math_pair_topic_stage"` for safer paper comparisons.

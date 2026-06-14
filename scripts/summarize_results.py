@@ -47,14 +47,20 @@ def summarize_one(experiment_name: str) -> None:
     # Primary comparisons.
     comparisons = []
     method_set = set(df["method"])
-    if "pac_math_verifier_balanced" in method_set:
+    preferred_primary = str(getattr(config, "PRIMARY_METHOD", "pac_math_pair_topic_stage"))
+    if preferred_primary in method_set:
+        primary = preferred_primary
+    elif "pac_math_pair_topic_stage" in method_set:
+        primary = "pac_math_pair_topic_stage"
+    elif "pac_math_verifier_balanced" in method_set:
         primary = "pac_math_verifier_balanced"
     elif "pac_math_router_balanced" in method_set:
         primary = "pac_math_router_balanced"
     elif "pac_math_adaptive_learned" in method_set:
         primary = "pac_math_adaptive_learned"
     else:
-        primary = "pac_math_pair_topic_stage"
+        primary = sorted(method_set)[0] if method_set else ""
+    print(f"Primary method for comparisons: {primary}")
     for baseline in ["stateless_debate", "4cand_majority", "4cand_confidence", "overall_reliability", "agent_topic_reliability", "pac_math_pair_topic_stage_support_sum", "pac_math_pair_topic_stage_guard", "pac_math_independent_only", "pac_math_safety_first", "pac_math_utility", "pac_math_accuracy_first", "pac_math_anchor_gate", "pac_math_cross_stage_support", "pac_math_stage_gate", "pac_math_adaptive_learned", "pac_math_adaptive_accuracy", "pac_math_adaptive_safety", "pac_math_router_accuracy", "pac_math_router_safety", "pac_math_verifier_best", "pac_math_verifier_safety", "pac_math_pair_topic_stage"]:
         if baseline in set(df["method"]) and primary in set(df["method"]):
             comparisons.append(mcnemar_pair(df, primary, baseline))

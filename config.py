@@ -20,6 +20,25 @@ TEST_FILE = SPLIT_DIR / "math500_test.jsonl"
 OLLAMA_BASE_URL = "http://localhost:11434"
 OLLAMA_TIMEOUT_SECONDS = 900
 
+# NVIDIA API endpoint for hosted OpenAI-compatible models.
+# Put NVIDIA_API_KEY=... in your shell or in a local .env file.
+# The free endpoint can be limited to 40 RPM, so use a conservative throttle.
+NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
+NVIDIA_API_KEY_ENV = "NVIDIA_API_KEY"
+NVIDIA_TIMEOUT_SECONDS = 900
+NVIDIA_RATE_LIMIT_RPM = 38.0
+NVIDIA_STREAM = True
+
+# Main controlled PAC-Math protocol disables model-specific hidden thinking.
+# Keep native thinking as an appendix ablation only.
+NVIDIA_ENABLE_THINKING = False
+NVIDIA_REASONING_BUDGET = 0
+NVIDIA_EXTRA_BODY = {}
+NVIDIA_MODEL_PREFIXES = ["nvidia/"]
+MODEL_PROVIDER_OVERRIDES = {
+    "nvidia/nemotron-3-ultra-550b-a55b": "nvidia",
+}
+
 # Keep the first run small. After smoke/pilot works, run scripts/run_full.py.
 SMOKE_CALIBRATION_N = 8
 SMOKE_TEST_N = 8
@@ -33,18 +52,26 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 # Your RTX 2000 Ada has 16 GB VRAM. gemma4:26b/31b may be slow or may spill to CPU.
 # Start with qwen3:8b and llama3.1:8b. Add gemma only after the pipeline works.
 MODEL_PAIRS = [
+    # v20 NVIDIA API pilot pair. Run pilot first before full.
     {
-        "pair_id": "qwen36_27b__phi4_14b_standard_v19",
-        "agent_a_model": "qwen3.6:27b",
-        "agent_b_model": "phi4:14b",
+        "pair_id": "gemma4_31b__nemotron3_ultra_550b_standard_v20",
+        "agent_a_model": "gemma4:31b",
+        "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
-        "pair_id": "phi4_14b__qwen36_27b_standard_v19",
-        "agent_a_model": "phi4:14b",
-        "agent_b_model": "qwen3.6:27b",
+        "pair_id": "nemotron3_ultra_550b__gemma4_31b_standard_v20",
+        "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "agent_b_model": "gemma4:31b",
     },
+
+    # Completed local baselines. Keep disabled unless intentionally recomputing.
+    # {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
+    # {"pair_id": "phi4_14b__qwen36_27b_standard_v19", "agent_a_model": "phi4:14b", "agent_b_model": "qwen3.6:27b"},
+    # {"pair_id": "qwen3_8b__phi4_14b_standard_v16", "agent_a_model": "qwen3:8b", "agent_b_model": "phi4:14b"},
+    # {"pair_id": "phi4_14b__qwen3_8b_standard_v16", "agent_a_model": "phi4:14b", "agent_b_model": "qwen3:8b"},
 ]
 
+# Generation settings
 # Generation settings. Keep temperature low for reproducibility.
 GENERATION_OPTIONS = {
     "temperature": 0.2,
@@ -82,7 +109,7 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v19_chat_think_false"
+PROTOCOL_VERSION = "standard_debate_v20_nvidia_api_chat_think_false"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5
@@ -94,6 +121,10 @@ PYTHONHASHSEED = 42
 # correctness and C2W-risk models on the calibration split only, then freezes
 # them for pilot/full test evaluation.
 ADAPTIVE_SELECTOR_ENABLED = True
+
+# Main paper method. Keep this fixed unless the research claim changes.
+PRIMARY_METHOD = "pac_math_pair_topic_stage"
+
 ADAPTIVE_LAMBDA_GRID = [0.0, 0.25, 0.5, 0.75, 1.0, 1.5, 2.0, 3.0]
 ADAPTIVE_SUPPORT_GRID = [0.0, 0.01, 0.03, 0.05]
 ADAPTIVE_CROSS_STAGE_GRID = [0.0, 0.02, 0.05]

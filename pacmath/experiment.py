@@ -10,7 +10,7 @@ import config
 from .adaptive_selector import AdaptiveCandidateSelector
 from .baselines import apply_all_methods, flip_annotations
 from .io_utils import append_jsonl, load_completed_ids, read_jsonl, rows_to_csv, subset_rows, write_jsonl
-from .ollama_client import OllamaClient
+from .ollama_client import MultiProviderClient, build_model_client
 from .pipeline import run_problem, verify_candidate_answers
 from .reliability import ReliabilityMemory
 
@@ -123,7 +123,7 @@ def _enrich_verifier_records(
     records: List[Dict[str, Any]],
     out_path: Path,
     pair_cfg: Dict[str, str],
-    client: OllamaClient,
+    client: MultiProviderClient,
     split_name: str,
 ) -> List[Dict[str, Any]]:
     if not getattr(config, "VERIFIER_ENABLED", False):
@@ -174,7 +174,7 @@ def run_split_records(
     rows: List[Dict[str, Any]],
     pair_cfg: Dict[str, str],
     out_dir: Path,
-    client: OllamaClient,
+    client: MultiProviderClient,
 ) -> List[Dict[str, Any]]:
     pair_id = pair_cfg["pair_id"]
     out_path = _records_path(out_dir, pair_id, split_name)
@@ -331,7 +331,7 @@ def apply_methods_to_records(
 def run_experiment(experiment_name: str, calibration_n: Optional[int], test_n: Optional[int]) -> None:
     out_dir = config.OUT_DIR / experiment_name
     out_dir.mkdir(parents=True, exist_ok=True)
-    client = OllamaClient(config.OLLAMA_BASE_URL, timeout_seconds=config.OLLAMA_TIMEOUT_SECONDS)
+    client = build_model_client(config)
 
     calib_rows = subset_rows(read_jsonl(config.CALIBRATION_FILE), calibration_n)
     test_rows = subset_rows(read_jsonl(config.TEST_FILE), test_n)

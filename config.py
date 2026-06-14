@@ -33,13 +33,16 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 # Your RTX 2000 Ada has 16 GB VRAM. gemma4:26b/31b may be slow or may spill to CPU.
 # Start with qwen3:8b and llama3.1:8b. Add gemma only after the pipeline works.
 MODEL_PAIRS = [
-    # v17 pilot target: Qwen 27B needs JSON repair and invalid-candidate filtering.
-    # Run pilot first. Do not run full until parse_ok is fixed for A0/A1.
-    {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
-
-    # Already completed v16 main pairs. Keep disabled unless intentionally recomputing.
-    # {"pair_id": "qwen3_8b__phi4_14b_standard_v16", "agent_a_model": "qwen3:8b", "agent_b_model": "phi4:14b"},
-    # {"pair_id": "phi4_14b__qwen3_8b_standard_v16", "agent_a_model": "phi4:14b", "agent_b_model": "qwen3:8b"},
+    {
+        "pair_id": "qwen36_27b__phi4_14b_standard_v19",
+        "agent_a_model": "qwen3.6:27b",
+        "agent_b_model": "phi4:14b",
+    },
+    {
+        "pair_id": "phi4_14b__qwen36_27b_standard_v19",
+        "agent_a_model": "phi4:14b",
+        "agent_b_model": "qwen3.6:27b",
+    },
 ]
 
 # Generation settings. Keep temperature low for reproducibility.

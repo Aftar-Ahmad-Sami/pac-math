@@ -1,5 +1,9 @@
 pair_id,candidate_id,n,parse_ok_rate,correct_rate
-qwen36_27b__phi4_14b_standard_v17,A0,120,0.175,0.15
-qwen36_27b__phi4_14b_standard_v17,A1,120,0.125,0.15
-qwen36_27b__phi4_14b_standard_v17,B0,120,1.0,0.26666666666666666
-qwen36_27b__phi4_14b_standard_v17,B1,120,1.0,0.5083333333333333
+phi4_14b__qwen36_27b_standard_v19,A0,120,1.0,0.25
+phi4_14b__qwen36_27b_standard_v19,A1,120,1.0,0.7083333333333334
+phi4_14b__qwen36_27b_standard_v19,B0,120,1.0,0.4666666666666667
+phi4_14b__qwen36_27b_standard_v19,B1,120,1.0,0.75
+qwen36_27b__phi4_14b_standard_v19,A0,120,1.0,0.4583333333333333
+qwen36_27b__phi4_14b_standard_v19,A1,120,1.0,0.7666666666666667
+qwen36_27b__phi4_14b_standard_v19,B0,120,1.0,0.25
+qwen36_27b__phi4_14b_standard_v19,B1,120,1.0,0.7166666666666667

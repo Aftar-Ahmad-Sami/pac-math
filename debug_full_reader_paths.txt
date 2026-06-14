@@ -1,0 +1,96 @@
+====================================================================================================
+FULL DIRECTORY FILES
+====================================================================================================
+outputs/full/audit_segments.csv | lines=80
+outputs/full/combined_test_method_rows.BAD_45000_BACKUP.jsonl | lines=45000
+outputs/full/combined_test_method_rows.MIXED_BACKUP.jsonl | lines=25000
+outputs/full/combined_test_method_rows.csv | lines=25031
+outputs/full/combined_test_method_rows.jsonl | lines=25000
+outputs/full/memory/
+outputs/full/method_rows/
+outputs/full/records/
+outputs/full/role_order_comparison.csv | lines=13
+outputs/full/selectors/
+
+====================================================================================================
+METHOD ROW FILES
+====================================================================================================
+calibration_phi4_14b__qwen36_27b_standard_v19_methods.jsonl | lines=10000
+calibration_qwen36_27b__phi4_14b_standard_v19_methods.jsonl | lines=10000
+test_phi4_14b__qwen36_27b_standard_v19_methods.jsonl | lines=12500
+test_qwen36_27b__phi4_14b_standard_v19_methods.jsonl | lines=12500
+
+====================================================================================================
+RECORD FILES
+====================================================================================================
+calibration_phi4_14b__qwen36_27b_standard_v19.jsonl | lines=400
+calibration_qwen36_27b__phi4_14b_standard_v19.jsonl | lines=400
+test_phi4_14b__qwen36_27b_standard_v19.jsonl | lines=500
+test_qwen36_27b__phi4_14b_standard_v19.jsonl | lines=500
+
+====================================================================================================
+COMBINED FILE CHECK
+====================================================================================================
+combined path: outputs/full/combined_test_method_rows.jsonl
+rows: 25000
+
+pairs:
+phi4_14b__qwen36_27b_standard_v19 12500
+qwen36_27b__phi4_14b_standard_v19 12500
+
+methods: 25
+4cand_confidence 1000
+4cand_majority 1000
+agent_topic_reliability 1000
+oracle_candidate 1000
+overall_reliability 1000
+pac_math_accuracy_first 1000
+pac_math_adaptive_accuracy 1000
+pac_math_adaptive_learned 1000
+pac_math_adaptive_safety 1000
+pac_math_anchor_gate 1000
+pac_math_cross_agent_anchor_gate 1000
+pac_math_cross_stage_support 1000
+pac_math_independent_only 1000
+pac_math_pair_topic_stage 1000
+pac_math_pair_topic_stage_guard 1000
+pac_math_pair_topic_stage_support_sum 1000
+pac_math_router_accuracy 1000
+pac_math_router_balanced 1000
+pac_math_router_safety 1000
+pac_math_safety_first 1000
+pac_math_stage_gate 1000
+pac_math_utility 1000
+single_A 1000
+single_B 1000
+stateless_debate 1000
+
+first row keys:
+['candidate_oracle_possible', 'correct_to_wrong', 'full_run_model_duration_seconds', 'full_run_total_tokens', 'full_run_wall_time_seconds', 'initial_any_correct', 'initial_both_wrong', 'is_correct', 'method', 'method_duration_seconds', 'method_total_tokens', 'pair_id', 'post_any_correct', 'preserved_correct', 'problem_index', 'run_id', 'selected_agent_id', 'selected_answer', 'selected_candidate_id', 'selected_confidence', 'selected_model', 'selected_normalized_answer', 'selected_stage', 'topic', 'wrong_to_correct']
+unique problem_index: 500
+unique problem_id: 0
+unique problem_hash: 0
+unique run_id: 1000
+
+====================================================================================================
+SCRIPT PATH REFERENCES
+====================================================================================================
+
+--- scripts/summarize_results.py ---
+0018:     path = base / "combined_test_method_rows.csv"
+0036:         elif experiment_name == "full" and config.FULL_TEST_N is not None:
+0041:     out_summary = base / "summary_methods.csv"
+0096:     for exp in ["smoke", "pilot", "full"]:
+
+--- scripts/diagnose_experiment.py ---
+0036:     combined = base / "combined_test_method_rows.csv"
+0038:         print(f"\n=== {exp}: missing combined_test_method_rows.csv ===")
+0199:     for exp in ["smoke", "pilot", "full"]:
+
+--- scripts/audit_experiment.py ---
+0039:     rows_path = out_dir / 'combined_test_method_rows.csv'
+0095:     for exp in ['pilot','full']:
+
+--- scripts/export_main_tables.py ---
+0066:     summary_path = split_dir / "summary_methods.csv"
+0117:     for split_name in ["pilot", "full"]:

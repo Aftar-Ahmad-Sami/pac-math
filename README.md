@@ -1,65 +1,56 @@
-# PAC-Math v20: NVIDIA API Endpoint Support
+# PAC-Math v21 Provider Routing + Length Retry
 
-This version adds a mixed-provider model client so PAC-Math can run local Ollama
-models and NVIDIA OpenAI-compatible API models in the same debate pair.
+This version fixes two issues from v20:
 
-Main new pair in `config.py`:
+1. **Agent A and Agent B can each be either Ollama or NVIDIA.**
+   - Ollama model names normally use colon tags, for example `gemma4:31b`, `phi4:14b`, `qwen3.6:27b`.
+   - NVIDIA-hosted model names normally use slash names, for example `nvidia/nemotron-3-ultra-550b-a55b` or `google/gemma-4-31b-it`.
+   - Slash-style names are routed to NVIDIA by default, so `google/gemma-4-31b-it` will no longer be sent to Ollama.
+   - Explicit prefixes are also supported:
+     - `nvidia:google/gemma-4-31b-it`
+     - `ollama:gemma4:31b`
+
+2. **Automatic retry after generation length cutoff.**
+   - The default `num_predict` was increased from 700 to 1400.
+   - If a response still ends with `done_reason=length` or `eval_count == num_predict`, the same JSON request is retried once with `LENGTH_RETRY_NUM_PREDICT = 2200`.
+
+## Important config fields
 
 ```python
-MODEL_PAIRS = [
-    {
-        "pair_id": "gemma4_31b__nemotron3_ultra_550b_standard_v20",
-        "agent_a_model": "gemma4:31b",
-        "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
-    },
-    {
-        "pair_id": "nemotron3_ultra_550b__gemma4_31b_standard_v20",
-        "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
-        "agent_b_model": "gemma4:31b",
-    },
-]
+NVIDIA_ROUTE_SLASH_MODELS = True
+MODEL_PROVIDER_OVERRIDES = {
+    "nvidia/nemotron-3-ultra-550b-a55b": "nvidia",
+    "google/gemma-4-31b-it": "nvidia",
+}
+
+GENERATION_OPTIONS = {
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "num_ctx": 8192,
+    "num_predict": 1400,
+    "seed": 42,
+}
+
+LENGTH_RETRY_ENABLED = True
+LENGTH_RETRY_NUM_PREDICT = 2200
 ```
 
-## Setup
+## Debug commands
+
+Check routing without making model calls:
 
 ```bash
-pip install -r requirements.txt
+python scripts/debug_provider_routing.py
+```
+
+Test a specific NVIDIA model endpoint:
+
+```bash
 export NVIDIA_API_KEY="your_key_here"
+python scripts/debug_nvidia_model_api.py
 ```
 
-or create a local `.env` file:
-
-```bash
-NVIDIA_API_KEY=your_key_here
-```
-
-## NVIDIA controls
-
-`config.py` contains:
-
-```python
-NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
-NVIDIA_RATE_LIMIT_RPM = 38.0
-NVIDIA_STREAM = True
-NVIDIA_ENABLE_THINKING = False
-NVIDIA_REASONING_BUDGET = 0
-PRIMARY_METHOD = "pac_math_pair_topic_stage"
-```
-
-The main controlled experiment keeps native hidden thinking disabled. This keeps
-Ollama and NVIDIA models under the same observable JSON-output protocol. If you
-want a native-thinking ablation later, set `NVIDIA_ENABLE_THINKING = True` and
-use a separate protocol version.
-
-## Test the NVIDIA endpoint first
-
-```bash
-python scripts/debug_nvidia_api.py
-```
-
-Expected: parseable JSON and `NVIDIA API test OK`.
-
-## Recommended run order
+Then run pilot:
 
 ```bash
 python scripts/run_pilot.py
@@ -69,19 +60,4 @@ python scripts/audit_experiment.py
 python scripts/export_main_tables.py
 ```
 
-Run full only if pilot passes:
-
-- all A0/B0/A1/B1 parse rates are near 1.0;
-- candidate oracle possible is high enough;
-- `pac_math_pair_topic_stage` beats or matches `stateless_debate` accuracy;
-- `pac_math_pair_topic_stage` reduces C2W relative to `stateless_debate`.
-
-## Main changes
-
-1. Added `NvidiaClient` using the OpenAI SDK and NVIDIA base URL.
-2. Added process-local rate limiting for hosted API calls.
-3. Added `MultiProviderClient` to route `nvidia/...` models to NVIDIA and all other models to Ollama.
-4. Kept PAC-Math parsing over visible `.content`, not hidden `reasoning_content`.
-5. Added `scripts/debug_nvidia_api.py`.
-6. Made CSV writing one-physical-line-per-row to avoid stale/mixed output confusion.
-7. Set `PRIMARY_METHOD = "pac_math_pair_topic_stage"` for safer paper comparisons.
+Do not run full until pilot parse rates and C2W behavior are acceptable.

@@ -34,9 +34,28 @@ NVIDIA_STREAM = True
 NVIDIA_ENABLE_THINKING = False
 NVIDIA_REASONING_BUDGET = 0
 NVIDIA_EXTRA_BODY = {}
-NVIDIA_MODEL_PREFIXES = ["nvidia/"]
+# Provider routing rules.
+# Any model name can be used in either agent_a_model or agent_b_model.
+# - Ollama models usually look like: qwen3.6:27b, phi4:14b, gemma4:31b
+# - NVIDIA-hosted models usually look like: vendor/model, e.g.
+#   nvidia/nemotron-3-ultra-550b-a55b or google/gemma-4-31b-it
+# Slash-style model names are routed to NVIDIA by default. Use
+# MODEL_PROVIDER_OVERRIDES to force exceptions.
+NVIDIA_MODEL_PREFIXES = [
+    "nvidia/",
+    "google/",
+    "meta/",
+    "mistralai/",
+    "microsoft/",
+    "deepseek-ai/",
+    "qwen/",
+    "moonshotai/",
+    "openai/",
+]
+NVIDIA_ROUTE_SLASH_MODELS = True
 MODEL_PROVIDER_OVERRIDES = {
     "nvidia/nemotron-3-ultra-550b-a55b": "nvidia",
+    "google/gemma-4-31b-it": "nvidia",
 }
 
 # Keep the first run small. After smoke/pilot works, run scripts/run_full.py.
@@ -52,17 +71,22 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 # Your RTX 2000 Ada has 16 GB VRAM. gemma4:26b/31b may be slow or may spill to CPU.
 # Start with qwen3:8b and llama3.1:8b. Add gemma only after the pipeline works.
 MODEL_PAIRS = [
-    # v20 NVIDIA API pilot pair. Run pilot first before full.
+    # v21 hosted/hosted pilot pair. This avoids two heavy local Ollama models
+    # and also tests that both agent A and agent B can be NVIDIA-hosted.
     {
-        "pair_id": "gemma4_31b__nemotron3_ultra_550b_standard_v20",
+        "pair_id": "google_gemma4_31b_it__nemotron3_ultra_550b_standard_v21",
         "agent_a_model": "google/gemma-4-31b-it",
         "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
-        "pair_id": "nemotron3_ultra_550b__gemma4_31b_standard_v20",
+        "pair_id": "nemotron3_ultra_550b__google_gemma4_31b_it_standard_v21",
         "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
         "agent_b_model": "google/gemma-4-31b-it",
     },
+
+    # Mixed local/API version. Enable this instead if you want local Gemma through Ollama.
+    # {"pair_id": "gemma4_31b_ollama__nemotron3_ultra_550b_standard_v21", "agent_a_model": "gemma4:31b", "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b"},
+    # {"pair_id": "nemotron3_ultra_550b__gemma4_31b_ollama_standard_v21", "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b", "agent_b_model": "gemma4:31b"},
 
     # Completed local baselines. Keep disabled unless intentionally recomputing.
     # {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
@@ -77,9 +101,17 @@ GENERATION_OPTIONS = {
     "temperature": 0.2,
     "top_p": 0.9,
     "num_ctx": 8192,
-    "num_predict": 700,
+    # 700 was too small for NVIDIA/Gemma style JSON responses and caused
+    # done_reason=length / eval_count=700 truncation. Keep this large enough
+    # for complete JSON but still bounded for cost and latency.
+    "num_predict": 1400,
     "seed": 42,
 }
+
+# If a candidate hits the generation length limit, PAC-Math automatically
+# retries that JSON request once with this larger cap before marking it failed.
+LENGTH_RETRY_ENABLED = True
+LENGTH_RETRY_NUM_PREDICT = 2200
 
 
 # v18 Ollama compatibility controls. Qwen-style reasoning models can return
@@ -109,7 +141,7 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v20_nvidia_api_chat_think_false"
+PROTOCOL_VERSION = "standard_debate_v21_provider_routing_len_retry"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5

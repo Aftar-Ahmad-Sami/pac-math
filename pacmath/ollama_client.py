@@ -363,37 +363,87 @@ class NvidiaClient:
 
 
 class MultiProviderClient:
-    """Route each model call to Ollama or NVIDIA by model name."""
+    """Route each model call to Ollama or NVIDIA by model name.
 
-    def __init__(self, ollama: OllamaClient, nvidia_factory, nvidia_model_prefixes: Optional[list[str]] = None, provider_overrides: Optional[Dict[str, str]] = None):
+    The routing is position-independent: agent A and agent B can each be either
+    an Ollama model or an NVIDIA-hosted OpenAI-compatible model.
+
+    Rules:
+    - explicit prefixes are supported: ``ollama:phi4:14b`` and
+      ``nvidia:google/gemma-4-31b-it``; the prefix is stripped before the call.
+    - explicit ``MODEL_PROVIDER_OVERRIDES`` in config.py wins.
+    - known NVIDIA vendor prefixes such as ``nvidia/`` or ``google/`` route to NVIDIA.
+    - if enabled, any slash-style model name (``vendor/model``) routes to NVIDIA.
+      Ollama model names usually use colon tags (``gemma4:31b``), so this avoids
+      accidental Ollama 404 errors for NVIDIA models like ``google/gemma-4-31b-it``.
+    """
+
+    def __init__(
+        self,
+        ollama: OllamaClient,
+        nvidia_factory,
+        nvidia_model_prefixes: Optional[list[str]] = None,
+        provider_overrides: Optional[Dict[str, str]] = None,
+        route_slash_models_to_nvidia: bool = True,
+    ):
         self.ollama = ollama
         self._nvidia_factory = nvidia_factory
         self._nvidia_client: Optional[NvidiaClient] = None
         self.nvidia_model_prefixes = tuple(nvidia_model_prefixes or ["nvidia/"])
         self.provider_overrides = dict(provider_overrides or {})
+        self.route_slash_models_to_nvidia = bool(route_slash_models_to_nvidia)
 
     def _nvidia(self) -> NvidiaClient:
         if self._nvidia_client is None:
             self._nvidia_client = self._nvidia_factory()
         return self._nvidia_client
 
+    @staticmethod
+    def _strip_provider_prefix(model: str) -> tuple[str, Optional[str]]:
+        model_s = str(model).strip()
+        lower = model_s.lower()
+        if lower.startswith("nvidia:"):
+            return model_s.split(":", 1)[1].strip(), "nvidia"
+        if lower.startswith("ollama:"):
+            return model_s.split(":", 1)[1].strip(), "ollama"
+        return model_s, None
+
     def provider_for_model(self, model: str) -> str:
-        override = self.provider_overrides.get(model)
+        clean_model, explicit_provider = self._strip_provider_prefix(model)
+        if explicit_provider:
+            return explicit_provider
+
+        override = self.provider_overrides.get(clean_model) or self.provider_overrides.get(str(model))
         if override:
-            return override.lower()
-        if str(model).startswith(self.nvidia_model_prefixes):
+            return str(override).lower()
+
+        if clean_model.startswith(self.nvidia_model_prefixes):
+            return "nvidia"
+        if self.route_slash_models_to_nvidia and "/" in clean_model:
             return "nvidia"
         return "ollama"
 
+    def routed_model_name(self, model: str) -> str:
+        clean_model, _ = self._strip_provider_prefix(model)
+        return clean_model
+
     def chat(self, model: str, *args: Any, **kwargs: Any) -> OllamaResponse:
-        if self.provider_for_model(model) == "nvidia":
-            return self._nvidia().chat(model, *args, **kwargs)
-        return self.ollama.chat(model, *args, **kwargs)
+        provider = self.provider_for_model(model)
+        routed_model = self.routed_model_name(model)
+        if provider == "nvidia":
+            return self._nvidia().chat(routed_model, *args, **kwargs)
+        if provider == "ollama":
+            return self.ollama.chat(routed_model, *args, **kwargs)
+        raise ValueError(f"Unknown provider '{provider}' for model '{model}'")
 
     def generate(self, model: str, *args: Any, **kwargs: Any) -> OllamaResponse:
-        if self.provider_for_model(model) == "nvidia":
-            return self._nvidia().generate(model, *args, **kwargs)
-        return self.ollama.generate(model, *args, **kwargs)
+        provider = self.provider_for_model(model)
+        routed_model = self.routed_model_name(model)
+        if provider == "nvidia":
+            return self._nvidia().generate(routed_model, *args, **kwargs)
+        if provider == "ollama":
+            return self.ollama.generate(routed_model, *args, **kwargs)
+        raise ValueError(f"Unknown provider '{provider}' for model '{model}'")
 
 
 def build_model_client(config_module: Any) -> MultiProviderClient:
@@ -421,6 +471,7 @@ def build_model_client(config_module: Any) -> MultiProviderClient:
         nvidia_factory=make_nvidia,
         nvidia_model_prefixes=list(getattr(config_module, "NVIDIA_MODEL_PREFIXES", ["nvidia/"])),
         provider_overrides=dict(getattr(config_module, "MODEL_PROVIDER_OVERRIDES", {}) or {}),
+        route_slash_models_to_nvidia=bool(getattr(config_module, "NVIDIA_ROUTE_SLASH_MODELS", True)),
     )
 
 

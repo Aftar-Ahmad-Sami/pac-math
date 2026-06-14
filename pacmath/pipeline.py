@@ -129,14 +129,19 @@ def _request_json(
         disable_thinking = bool(getattr(_cfg, "OLLAMA_DISABLE_THINKING", True))
         use_chat_fallback = bool(getattr(_cfg, "OLLAMA_CHAT_FALLBACK", True))
         prefer_chat = bool(getattr(_cfg, "OLLAMA_PREFER_CHAT", True))
+        length_retry_enabled = bool(getattr(_cfg, "LENGTH_RETRY_ENABLED", True))
+        length_retry_num_predict = int(getattr(_cfg, "LENGTH_RETRY_NUM_PREDICT", 2200))
     except Exception:
         disable_thinking = True
         use_chat_fallback = True
         prefer_chat = True
+        length_retry_enabled = True
+        length_retry_num_predict = 2200
 
     think_value = False if disable_thinking else None
     trace: List[Dict[str, Any]] = []
     last_text = ""
+    last_length_limited = False
     token_info = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0, "duration_ns": 0}
 
     def _record_trace(kind: str, json_mode: bool, resp: Any = None, error: str = "") -> None:
@@ -171,15 +176,44 @@ def _request_json(
                 item["thinking_head"] = str(think_text)[:500]
         trace.append(item)
 
-    def _try_parse(kind: str, use_prompt: str, json_mode: bool) -> Optional[Dict[str, Any]]:
-        nonlocal last_text, token_info
+    def _with_length_retry_options(base_options: Dict[str, Any]) -> Dict[str, Any]:
+        retry_options = dict(base_options or {})
+        current_np = int(retry_options.get("num_predict", retry_options.get("max_tokens", 0)) or 0)
+        retry_cap = max(length_retry_num_predict, current_np)
+        retry_options["num_predict"] = retry_cap
+        retry_options["max_tokens"] = retry_cap
+        return retry_options
+
+    def _is_length_limited_response(resp: Any, call_options: Dict[str, Any]) -> bool:
+        raw = getattr(resp, "raw", None) if resp is not None else None
+        if not isinstance(raw, dict):
+            return False
+        reason = str(raw.get("done_reason", "") or raw.get("finish_reason", "")).strip().lower()
+        if reason in {"length", "max_tokens", "max_completion_tokens", "context_length"}:
+            return True
+        try:
+            requested = int(call_options.get("max_tokens", call_options.get("num_predict", 0)) or 0)
+            eval_count = int(raw.get("eval_count", 0) or 0)
+            return requested > 0 and eval_count >= requested
+        except Exception:
+            return False
+
+    def _try_parse(
+        kind: str,
+        use_prompt: str,
+        json_mode: bool,
+        call_options: Optional[Dict[str, Any]] = None,
+        trace_note: str = "",
+    ) -> Optional[Dict[str, Any]]:
+        nonlocal last_text, token_info, last_length_limited
+        call_options = dict(call_options or options or {})
         try:
             if kind == "generate":
                 resp = client.generate(
                     model=model,
                     prompt=use_prompt,
                     system=system,
-                    options=options,
+                    options=call_options,
                     json_mode=json_mode,
                     think=think_value,
                 )
@@ -188,7 +222,7 @@ def _request_json(
                     model=model,
                     prompt=use_prompt,
                     system=system,
-                    options=options,
+                    options=call_options,
                     json_mode=json_mode,
                     think=think_value,
                 )
@@ -196,16 +230,27 @@ def _request_json(
                 raise ValueError(f"Unknown request kind: {kind}")
         except Exception as exc:
             _record_trace(kind, json_mode, None, error=repr(exc))
+            if trace and trace_note:
+                trace[-1]["trace_note"] = trace_note
             return None
 
         last_text = resp.text or ""
+        last_length_limited = _is_length_limited_response(resp, call_options)
         token_info = {
             "prompt_tokens": resp.prompt_eval_count,
             "completion_tokens": resp.eval_count,
             "total_tokens": resp.total_tokens,
             "duration_ns": resp.total_duration,
+            "length_limited": bool(last_length_limited),
+            "requested_num_predict": int(call_options.get("num_predict", call_options.get("max_tokens", 0)) or 0),
         }
         _record_trace(kind, json_mode, resp)
+        if trace:
+            trace[-1]["length_limited"] = bool(last_length_limited)
+            trace[-1]["requested_num_predict"] = token_info["requested_num_predict"]
+            if trace_note:
+                trace[-1]["trace_note"] = trace_note
+
         parsed = safe_json_loads(last_text)
         if parsed is not None:
             parsed["_parse_ok"] = True
@@ -249,6 +294,24 @@ def _request_json(
             if parsed is not None:
                 parsed.update(flags)
                 return parsed
+
+            # If the endpoint reports a generation-length cutoff, retry the same
+            # request once with a larger cap before moving to unrelated fallbacks.
+            # This directly handles failures such as done_reason=length with
+            # eval_count exactly equal to num_predict.
+            if length_retry_enabled and last_length_limited:
+                retry_options = _with_length_retry_options(options)
+                parsed = _try_parse(
+                    kind,
+                    req_prompt + "\n\nReturn the complete JSON object. Do not stop before the closing }.",
+                    json_mode=json_mode,
+                    call_options=retry_options,
+                    trace_note="length_retry",
+                )
+                if parsed is not None:
+                    parsed.update(flags)
+                    parsed["_length_retry_used"] = True
+                    return parsed
 
     return {
         "_parse_ok": False,

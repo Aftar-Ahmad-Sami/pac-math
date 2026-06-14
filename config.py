@@ -55,13 +55,13 @@ MODEL_PAIRS = [
     # v20 NVIDIA API pilot pair. Run pilot first before full.
     {
         "pair_id": "gemma4_31b__nemotron3_ultra_550b_standard_v20",
-        "agent_a_model": "gemma4:31b",
+        "agent_a_model": "google/gemma-4-31b-it",
         "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
         "pair_id": "nemotron3_ultra_550b__gemma4_31b_standard_v20",
         "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
-        "agent_b_model": "gemma4:31b",
+        "agent_b_model": "google/gemma-4-31b-it",
     },
 
     # Completed local baselines. Keep disabled unless intentionally recomputing.

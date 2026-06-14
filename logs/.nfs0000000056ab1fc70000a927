@@ -1,0 +1,6 @@
+
+=== Pair: gemma4_31b__nemotron3_ultra_550b_standard_v20 ===
+Calibration records: 200 | Test records: 120
+[calibration | gemma4_31b__nemotron3_ultra_550b_standard_v20] completed 10/200 (ok)
+[calibration | gemma4_31b__nemotron3_ultra_550b_standard_v20] completed 15/200 (ok)
+[calibration | gemma4_31b__nemotron3_ultra_550b_standard_v20] completed 20/200 (ok)

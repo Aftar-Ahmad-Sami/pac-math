@@ -1,0 +1,14 @@
+\begin{tabular}{llllllllllllll}
+\toprule
+method & n & accuracy & c2w_risk_n & c2w_flip_count & c2w_flip_rate & both_wrong_n & w2c_count & w2c_recovery_rate & preservation_rate & candidate_oracle_possible & oracle_gap & mean_method_tokens & mean_method_duration_seconds \\
+\midrule
+single_A & 1000 & 0.3080 & 431 & 123 & 0.2854 & 569 & 0 & 0.0000 & 0.7146 & 0.7440 & 0.4360 & 500.0870 & 8.0661 \\
+single_B & 1000 & 0.3050 & 431 & 126 & 0.2923 & 569 & 0 & 0.0000 & 0.7077 & 0.7440 & 0.4390 & 497.3970 & 8.0104 \\
+stateless_debate & 1000 & 0.6740 & 431 & 27 & 0.0626 & 569 & 270 & 0.4745 & 0.9374 & 0.7440 & 0.0700 & 4146.8890 & 40.7088 \\
+4cand_majority & 1000 & 0.6140 & 431 & 17 & 0.0394 & 569 & 200 & 0.3515 & 0.9606 & 0.7440 & 0.1300 & 4146.8890 & 40.7088 \\
+pac_math_pair_topic_stage & 1000 & 0.6960 & 431 & 14 & 0.0325 & 569 & 279 & 0.4903 & 0.9675 & 0.7440 & 0.0480 & 4146.8890 & 40.7088 \\
+pac_math_adaptive_learned & 1000 & 0.7020 & 431 & 30 & 0.0696 & 569 & 301 & 0.5290 & 0.9304 & 0.7440 & 0.0420 & 4146.8890 & 40.7088 \\
+pac_math_router_safety & 1000 & 0.6830 & 431 & 14 & 0.0325 & 569 & 266 & 0.4675 & 0.9675 & 0.7440 & 0.0610 & 4146.8890 & 40.7088 \\
+oracle_candidate & 1000 & 0.7440 & 431 & 0 & 0.0000 & 569 & 313 & 0.5501 & 1.0000 & 0.7440 & 0.0000 & 4146.8890 & 40.7088 \\
+\bottomrule
+\end{tabular}

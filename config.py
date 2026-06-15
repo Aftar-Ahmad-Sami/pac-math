@@ -75,13 +75,13 @@ MODEL_PAIRS = [
     # and also tests that both agent A and agent B can be NVIDIA-hosted.
     {
         "pair_id": "google_gemma4_31b_it__nemotron3_ultra_550b_standard_v21",
-        "agent_a_model": "google/gemma-4-31b-it",
+        "agent_a_model": "gemma4:31b",
         "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
         "pair_id": "nemotron3_ultra_550b__google_gemma4_31b_it_standard_v21",
         "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
-        "agent_b_model": "google/gemma-4-31b-it",
+        "agent_b_model": "gemma4:31b",
     },
 
     # Mixed local/API version. Enable this instead if you want local Gemma through Ollama.

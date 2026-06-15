@@ -1,56 +1,57 @@
-# PAC-Math v21 Provider Routing + Length Retry
+# PAC-Math v22: Provider-Explicit Routing + Parse-Clean Cache
 
-This version fixes two issues from v20:
+This version fixes two issues seen in the mixed Ollama/NVIDIA pilot:
 
-1. **Agent A and Agent B can each be either Ollama or NVIDIA.**
-   - Ollama model names normally use colon tags, for example `gemma4:31b`, `phi4:14b`, `qwen3.6:27b`.
-   - NVIDIA-hosted model names normally use slash names, for example `nvidia/nemotron-3-ultra-550b-a55b` or `google/gemma-4-31b-it`.
-   - Slash-style names are routed to NVIDIA by default, so `google/gemma-4-31b-it` will no longer be sent to Ollama.
-   - Explicit prefixes are also supported:
-     - `nvidia:google/gemma-4-31b-it`
-     - `ollama:gemma4:31b`
+1. **Provider ambiguity**: the model pair now uses explicit provider prefixes.
+   - `ollama:gemma4:31b` routes to local Ollama.
+   - `nvidia:nvidia/nemotron-3-ultra-550b-a55b` routes to NVIDIA API.
 
-2. **Automatic retry after generation length cutoff.**
-   - The default `num_predict` was increased from 700 to 1400.
-   - If a response still ends with `done_reason=length` or `eval_count == num_predict`, the same JSON request is retried once with `LENGTH_RETRY_NUM_PREDICT = 2200`.
+2. **PARSE_ERROR caching**: records with A0/B0/A1/B1 are no longer considered complete if any candidate has `parse_ok=false` when `REQUIRE_ALL_CANDIDATES_PARSE_OK=True`. This prevents bad NVIDIA/Ollama outputs from being reused silently.
 
-## Important config fields
+Key settings in `config.py`:
 
 ```python
-NVIDIA_ROUTE_SLASH_MODELS = True
-MODEL_PROVIDER_OVERRIDES = {
-    "nvidia/nemotron-3-ultra-550b-a55b": "nvidia",
-    "google/gemma-4-31b-it": "nvidia",
-}
-
-GENERATION_OPTIONS = {
-    "temperature": 0.2,
-    "top_p": 0.9,
-    "num_ctx": 8192,
-    "num_predict": 1400,
-    "seed": 42,
-}
-
-LENGTH_RETRY_ENABLED = True
-LENGTH_RETRY_NUM_PREDICT = 2200
+PROTOCOL_VERSION = "standard_debate_v22_provider_parse_retry"
+NVIDIA_STREAM = False
+MAX_JSON_RETRIES = 3
+REQUIRE_ALL_CANDIDATES_PARSE_OK = True
+RECORD_PARSE_RETRY_ATTEMPTS = 1
 ```
 
-## Debug commands
+Default model pairs:
 
-Check routing without making model calls:
-
-```bash
-python scripts/debug_provider_routing.py
+```python
+ollama:gemma4:31b  x  nvidia:nvidia/nemotron-3-ultra-550b-a55b
+nvidia:nvidia/nemotron-3-ultra-550b-a55b  x  ollama:gemma4:31b
 ```
 
-Test a specific NVIDIA model endpoint:
+Before running:
 
 ```bash
 export NVIDIA_API_KEY="your_key_here"
+python scripts/debug_provider_routing.py
 python scripts/debug_nvidia_model_api.py
 ```
 
-Then run pilot:
+Clean v22 only:
+
+```bash
+rm -f outputs/pilot/records/*standard_v22*.jsonl
+rm -f outputs/pilot/records/*ollama_gemma4_31b__nvidia_nemotron3_ultra_550b*.jsonl
+rm -f outputs/pilot/records/*nvidia_nemotron3_ultra_550b__ollama_gemma4_31b*.jsonl
+rm -f outputs/pilot/method_rows/*standard_v22*.jsonl
+rm -f outputs/pilot/method_rows/*ollama_gemma4_31b__nvidia_nemotron3_ultra_550b*.jsonl
+rm -f outputs/pilot/method_rows/*nvidia_nemotron3_ultra_550b__ollama_gemma4_31b*.jsonl
+rm -f outputs/pilot/combined_test_method_rows.jsonl outputs/pilot/combined_test_method_rows.csv
+rm -f outputs/pilot/summary_methods.csv outputs/pilot/mcnemar_primary_comparisons.csv outputs/pilot/summary_by_topic.csv
+rm -f outputs/pilot/audit_segments.csv outputs/pilot/diagnostic_*.csv
+rm -f outputs/pilot/main_table_methods.csv outputs/pilot/main_table_methods.tex
+rm -f outputs/pilot/appendix_table_methods.csv outputs/pilot/appendix_table_methods.tex
+find outputs/pilot/memory -type f -name '*standard_v22*' -delete 2>/dev/null
+find outputs/pilot/selectors -type f -name '*standard_v22*' -delete 2>/dev/null
+```
+
+Run pilot:
 
 ```bash
 python scripts/run_pilot.py
@@ -58,6 +59,7 @@ python scripts/summarize_results.py
 python scripts/diagnose_experiment.py
 python scripts/audit_experiment.py
 python scripts/export_main_tables.py
+python scripts/inspect_candidate_parse_failures.py
 ```
 
-Do not run full until pilot parse rates and C2W behavior are acceptable.
+Do not run full until every candidate parse rate is at least 0.98 for both role orders.

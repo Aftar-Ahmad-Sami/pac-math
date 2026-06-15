@@ -697,6 +697,31 @@ def apply_all_methods(record: Dict[str, Any], memory: Optional[ReliabilityMemory
     return methods
 
 
+def _selected_candidate_debug(cand: Dict[str, Any]) -> Dict[str, Any]:
+    """Compact parse/debug fields for method-row JSONL/CSV.
+
+    Older method rows only showed selected_answer=PARSE_ERROR, which hid the
+    original API/runtime clue. These fields make failures diagnosable without
+    opening the full candidate record.
+    """
+    trace = cand.get("request_trace") or []
+    last_trace = trace[-1] if isinstance(trace, list) and trace else {}
+    tokens = cand.get("tokens") or {}
+    return {
+        "selected_parse_ok": bool(cand.get("parse_ok", True)),
+        "selected_attempts": int(cand.get("attempts", 0) or 0),
+        "selected_length_limited": bool(tokens.get("length_limited", False)),
+        "selected_requested_num_predict": int(tokens.get("requested_num_predict", 0) or 0),
+        "selected_raw_response_head": str(cand.get("raw_response", ""))[:500],
+        "selected_last_trace_kind": last_trace.get("kind") if isinstance(last_trace, dict) else None,
+        "selected_last_trace_json_mode": last_trace.get("json_mode") if isinstance(last_trace, dict) else None,
+        "selected_last_trace_error": last_trace.get("error") if isinstance(last_trace, dict) else None,
+        "selected_last_trace_text_head": last_trace.get("text_head") if isinstance(last_trace, dict) else None,
+        "selected_last_trace_done_reason": last_trace.get("done_reason") if isinstance(last_trace, dict) else None,
+        "selected_last_trace_length_limited": last_trace.get("length_limited") if isinstance(last_trace, dict) else None,
+    }
+
+
 def _method_result(name: str, cand: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "method": name,
@@ -708,6 +733,7 @@ def _method_result(name: str, cand: Dict[str, Any]) -> Dict[str, Any]:
         "selected_agent_id": cand.get("agent_id"),
         "selected_model": cand.get("model"),
         "selected_stage": cand.get("stage"),
+        **_selected_candidate_debug(cand),
     }
 
 

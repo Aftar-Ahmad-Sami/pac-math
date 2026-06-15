@@ -77,15 +77,55 @@ def _record_protocol_matches(rec: Dict[str, Any]) -> bool:
     return str(rec.get("protocol_version", "")) == _current_protocol_version()
 
 
-def _is_complete_record(rec: Dict[str, Any]) -> bool:
-    """A cached record is reusable only if it is complete and protocol-current."""
+def _candidate_parse_failures(rec: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return compact information about candidate parse failures in a record."""
+    failures: List[Dict[str, Any]] = []
+    for cand in rec.get("candidates") or []:
+        cid = str(cand.get("candidate_id", ""))
+        if bool(cand.get("parse_ok", True)):
+            continue
+        trace = cand.get("request_trace") or []
+        last_trace = trace[-1] if isinstance(trace, list) and trace else {}
+        failures.append({
+            "candidate_id": cid,
+            "agent_id": cand.get("agent_id"),
+            "model": cand.get("model"),
+            "stage": cand.get("stage"),
+            "answer": cand.get("answer"),
+            "attempts": cand.get("attempts", 0),
+            "raw_response_head": str(cand.get("raw_response", ""))[:500],
+            "last_trace_kind": last_trace.get("kind") if isinstance(last_trace, dict) else None,
+            "last_trace_json_mode": last_trace.get("json_mode") if isinstance(last_trace, dict) else None,
+            "last_trace_error": last_trace.get("error") if isinstance(last_trace, dict) else None,
+            "last_trace_text_head": last_trace.get("text_head") if isinstance(last_trace, dict) else None,
+            "last_trace_done_reason": last_trace.get("done_reason") if isinstance(last_trace, dict) else None,
+            "last_trace_length_limited": last_trace.get("length_limited") if isinstance(last_trace, dict) else None,
+        })
+    return failures
+
+
+def _all_required_candidates_present(rec: Dict[str, Any]) -> bool:
     candidates = rec.get("candidates") or []
+    candidate_ids = {str(c.get("candidate_id")) for c in candidates}
+    return {"A0", "B0", "A1", "B1"}.issubset(candidate_ids)
+
+
+def _is_complete_record(rec: Dict[str, Any]) -> bool:
+    """A cached record is reusable only if complete, protocol-current, and parse-clean.
+
+    v21 treated records with A0/B0/A1/B1 as complete even when a candidate was
+    PARSE_ERROR. That made bad NVIDIA/Ollama responses persist in the cache and
+    prevented retry on later runs. v22 can require all four candidates to parse.
+    """
     if rec.get("error"):
         return False
     if not _record_protocol_matches(rec):
         return False
-    candidate_ids = {str(c.get("candidate_id")) for c in candidates}
-    return {"A0", "B0", "A1", "B1"}.issubset(candidate_ids)
+    if not _all_required_candidates_present(rec):
+        return False
+    if bool(getattr(config, "REQUIRE_ALL_CANDIDATES_PARSE_OK", True)):
+        return len(_candidate_parse_failures(rec)) == 0
+    return True
 
 
 def _latest_record_by_run_id(records: List[Dict[str, Any]]) -> Dict[str, Dict[str, Any]]:
@@ -199,43 +239,72 @@ def run_split_records(
         run_id = f"{pair_id}__{i}"
         if run_id in completed_ok:
             continue
-        try:
-            rec = run_problem(
-                client=client,
-                row=row,
-                pair_id=pair_id,
-                agent_a_model=pair_cfg["agent_a_model"],
-                agent_b_model=pair_cfg["agent_b_model"],
-                problem_cols=config.PROBLEM_COL_CANDIDATES,
-                topic_cols=config.TOPIC_COL_CANDIDATES,
-                answer_cols=config.ANSWER_COL_CANDIDATES,
-                options=config.GENERATION_OPTIONS,
-                max_retries=config.MAX_JSON_RETRIES,
-                problem_index=i,
-            )
-        except Exception as e:
-            if config.STOP_ON_OLLAMA_ERROR:
-                raise
-            rec = {
-                "run_id": run_id,
-                "protocol_version": _current_protocol_version(),
-                "problem_index": i,
-                "pair_id": pair_id,
-                "agent_a_model": pair_cfg["agent_a_model"],
-                "agent_b_model": pair_cfg["agent_b_model"],
-                "error": repr(e),
-                "candidates": [],
-                "topic": "unknown",
-                "total_tokens": 0,
-                "total_duration_ns": 0,
-                "wall_time_seconds": 0.0,
-            }
+
+        max_record_attempts = 1 + max(0, int(getattr(config, "RECORD_PARSE_RETRY_ATTEMPTS", 0)))
+        rec: Dict[str, Any] = {}
+        for record_attempt in range(1, max_record_attempts + 1):
+            try:
+                rec = run_problem(
+                    client=client,
+                    row=row,
+                    pair_id=pair_id,
+                    agent_a_model=pair_cfg["agent_a_model"],
+                    agent_b_model=pair_cfg["agent_b_model"],
+                    problem_cols=config.PROBLEM_COL_CANDIDATES,
+                    topic_cols=config.TOPIC_COL_CANDIDATES,
+                    answer_cols=config.ANSWER_COL_CANDIDATES,
+                    options=config.GENERATION_OPTIONS,
+                    max_retries=config.MAX_JSON_RETRIES,
+                    problem_index=i,
+                )
+                rec["record_attempt"] = record_attempt
+                failures = _candidate_parse_failures(rec)
+                if failures:
+                    rec["candidate_parse_failures"] = failures
+                if _is_complete_record(rec):
+                    break
+                if record_attempt < max_record_attempts:
+                    failed_ids = ",".join(f.get("candidate_id", "?") for f in failures) or "unknown"
+                    print(
+                        f"[{split_name} | {pair_id}] retrying problem {i} due to parse failure "
+                        f"({failed_ids}); attempt {record_attempt}/{max_record_attempts}"
+                    )
+            except Exception as e:
+                if config.STOP_ON_OLLAMA_ERROR:
+                    raise
+                rec = {
+                    "run_id": run_id,
+                    "protocol_version": _current_protocol_version(),
+                    "problem_index": i,
+                    "pair_id": pair_id,
+                    "agent_a_model": pair_cfg["agent_a_model"],
+                    "agent_b_model": pair_cfg["agent_b_model"],
+                    "error": repr(e),
+                    "record_attempt": record_attempt,
+                    "candidates": [],
+                    "topic": "unknown",
+                    "total_tokens": 0,
+                    "total_duration_ns": 0,
+                    "wall_time_seconds": 0.0,
+                }
+                if record_attempt < max_record_attempts:
+                    print(
+                        f"[{split_name} | {pair_id}] retrying problem {i} after exception: {repr(e)}; "
+                        f"attempt {record_attempt}/{max_record_attempts}"
+                    )
+                    continue
+                break
+
         append_jsonl(out_path, rec)
         if _is_complete_record(rec):
             completed_ok.add(run_id)
         if (i + 1) % config.SAVE_EVERY_N_PROBLEMS == 0:
             status = "ok" if _is_complete_record(rec) else "incomplete"
-            print(f"[{split_name} | {pair_id}] completed {i + 1}/{len(rows)} ({status})")
+            extra = ""
+            failures = _candidate_parse_failures(rec)
+            if failures:
+                extra = " parse_failed=" + ",".join(str(f.get("candidate_id", "?")) for f in failures)
+            print(f"[{split_name} | {pair_id}] completed {i + 1}/{len(rows)} ({status}{extra})")
 
     final_records = read_jsonl(out_path) if out_path.exists() else []
     compact = _compact_records_file(out_path, final_records) if final_records else []

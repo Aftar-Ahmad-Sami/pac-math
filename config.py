@@ -27,7 +27,7 @@ NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 NVIDIA_API_KEY_ENV = "NVIDIA_API_KEY"
 NVIDIA_TIMEOUT_SECONDS = 900
 NVIDIA_RATE_LIMIT_RPM = 38.0
-NVIDIA_STREAM = True
+NVIDIA_STREAM = False
 
 # Main controlled PAC-Math protocol disables model-specific hidden thinking.
 # Keep native thinking as an appendix ablation only.
@@ -71,22 +71,22 @@ FULL_TEST_N = None  # None means all rows in TEST_FILE.
 # Your RTX 2000 Ada has 16 GB VRAM. gemma4:26b/31b may be slow or may spill to CPU.
 # Start with qwen3:8b and llama3.1:8b. Add gemma only after the pipeline works.
 MODEL_PAIRS = [
-    # v21 hosted/hosted pilot pair. This avoids two heavy local Ollama models
-    # and also tests that both agent A and agent B can be NVIDIA-hosted.
+    # v22 mixed local/API pilot pair. Explicit prefixes make the provider
+    # unambiguous and the pair_id now matches the actual model source.
     {
-        "pair_id": "google_gemma4_31b_it__nemotron3_ultra_550b_standard_v21",
-        "agent_a_model": "gemma4:31b",
-        "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b",
+        "pair_id": "ollama_gemma4_31b__nvidia_nemotron3_ultra_550b_standard_v22",
+        "agent_a_model": "ollama:gemma4:31b",
+        "agent_b_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
-        "pair_id": "nemotron3_ultra_550b__google_gemma4_31b_it_standard_v21",
-        "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b",
-        "agent_b_model": "gemma4:31b",
+        "pair_id": "nvidia_nemotron3_ultra_550b__ollama_gemma4_31b_standard_v22",
+        "agent_a_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b",
+        "agent_b_model": "ollama:gemma4:31b",
     },
 
-    # Mixed local/API version. Enable this instead if you want local Gemma through Ollama.
-    # {"pair_id": "gemma4_31b_ollama__nemotron3_ultra_550b_standard_v21", "agent_a_model": "gemma4:31b", "agent_b_model": "nvidia/nemotron-3-ultra-550b-a55b"},
-    # {"pair_id": "nemotron3_ultra_550b__gemma4_31b_ollama_standard_v21", "agent_a_model": "nvidia/nemotron-3-ultra-550b-a55b", "agent_b_model": "gemma4:31b"},
+    # Hosted/API-only version. Enable this only if you want NVIDIA-served Gemma.
+    # {"pair_id": "nvidia_google_gemma4_31b_it__nvidia_nemotron3_ultra_550b_standard_v22", "agent_a_model": "nvidia:google/gemma-4-31b-it", "agent_b_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b"},
+    # {"pair_id": "nvidia_nemotron3_ultra_550b__nvidia_google_gemma4_31b_it_standard_v22", "agent_a_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b", "agent_b_model": "nvidia:google/gemma-4-31b-it"},
 
     # Completed local baselines. Keep disabled unless intentionally recomputing.
     # {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
@@ -123,7 +123,7 @@ OLLAMA_PREFER_CHAT = True
 
 # Debate and parsing
 DEBATE_ROUNDS = 2  # implemented as critique round + revision round
-MAX_JSON_RETRIES = 2
+MAX_JSON_RETRIES = 3
 
 # Reliability smoothing
 ALPHA = 10.0
@@ -141,12 +141,19 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v21_provider_routing_len_retry"
+PROTOCOL_VERSION = "standard_debate_v22_provider_parse_retry"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5
 STOP_ON_OLLAMA_ERROR = False
 PYTHONHASHSEED = 42
+
+# Cache/retry behavior. A record containing A0/B0/A1/B1 but with PARSE_ERROR
+# should not be treated as complete; otherwise bad NVIDIA/Ollama responses are
+# cached forever and calibration/test summaries silently include failures.
+REQUIRE_ALL_CANDIDATES_PARSE_OK = True
+RECORD_PARSE_RETRY_ATTEMPTS = 1
+
 
 # Adaptive PAC selector
 # This is the non-static, calibration-trained selector. It learns candidate

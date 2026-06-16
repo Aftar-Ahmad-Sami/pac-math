@@ -1,9 +1,0 @@
-pair_id,candidate_id,n,parse_ok_rate,correct_rate
-qwen3_8b_A__qwen3_8b_B,A0,8,1.0,0.375
-qwen3_8b_A__qwen3_8b_B,A1,8,1.0,0.375
-qwen3_8b_A__qwen3_8b_B,B0,8,1.0,0.375
-qwen3_8b_A__qwen3_8b_B,B1,8,1.0,0.375
-qwen3_8b__llama31_8b,A0,8,1.0,0.375
-qwen3_8b__llama31_8b,A1,8,1.0,0.375
-qwen3_8b__llama31_8b,B0,8,1.0,0.0
-qwen3_8b__llama31_8b,B1,8,1.0,0.125

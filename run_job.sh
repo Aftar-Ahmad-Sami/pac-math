@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH -J pacmath_pilot
-#SBATCH -o /project/sajja/asami4/pac-math/logs/pilot-gemma-nvi.o%j
-#SBATCH -e /project/sajja/asami4/pac-math/logs/pilot-gemma-nvi.e%j
+#SBATCH -o /project/sajja/asami4/pac-math/logs/pilot-gemma-nvi-v22.o%j
+#SBATCH -e /project/sajja/asami4/pac-math/logs/pilot-gemma-nvi-v22.e%j
 #SBATCH --mail-user=asami4@cougarnet.uh.edu
 #SBATCH --mail-type=FAIL,END
 #SBATCH --nodes=1
@@ -28,6 +28,7 @@ nohup /project/sajja/asami4/bin/ollama serve > ollama.log 2>&1 &
 sleep 5
 
 # ? Run your script
+unset NVIDIA_API_KEY_ENV
 export NVIDIA_API_KEY="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"
 
 python -u scripts/run_pilot.py

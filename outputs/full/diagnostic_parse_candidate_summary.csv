@@ -1,9 +1,0 @@
-pair_id,candidate_id,n,parse_ok_rate,correct_rate
-phi4_14b__qwen36_27b_standard_v19,A0,500,1.0,0.222
-phi4_14b__qwen36_27b_standard_v19,A1,500,1.0,0.67
-phi4_14b__qwen36_27b_standard_v19,B0,500,1.0,0.386
-phi4_14b__qwen36_27b_standard_v19,B1,500,1.0,0.676
-qwen36_27b__phi4_14b_standard_v19,A0,500,1.0,0.394
-qwen36_27b__phi4_14b_standard_v19,A1,500,1.0,0.682
-qwen36_27b__phi4_14b_standard_v19,B0,500,1.0,0.224
-qwen36_27b__phi4_14b_standard_v19,B1,500,1.0,0.684

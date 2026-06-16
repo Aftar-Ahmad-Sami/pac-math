@@ -40,3 +40,4 @@ def test_model(model: str):
 if __name__ == "__main__":
     # Edit this line for any NVIDIA-hosted model listed on build.nvidia.com.
     test_model("google/gemma-4-31b-it")
+    test_model("nvidia/nemotron-3-ultra-550b-a55b")

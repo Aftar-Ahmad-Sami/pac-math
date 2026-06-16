@@ -174,6 +174,8 @@ class NvidiaClient:
         enable_thinking: bool = False,
         reasoning_budget: int = 0,
         extra_body: Optional[Dict[str, Any]] = None,
+        max_api_retries: int = 6,
+        rate_limit_backoff_seconds: float = 20.0,
     ):
         if load_dotenv is not None:
             load_dotenv()
@@ -181,9 +183,16 @@ class NvidiaClient:
             raise RuntimeError("The 'openai' package is required for NVIDIA API models. Run: pip install openai python-dotenv")
         self.base_url = base_url.rstrip("/")
         self.api_key_env = api_key_env
-        self.api_key = api_key or os.getenv(api_key_env)
+        # Guard against a common configuration mistake: putting the actual key
+        # into NVIDIA_API_KEY_ENV instead of setting NVIDIA_API_KEY.  Do not echo
+        # the key in error messages.
+        if not api_key and isinstance(api_key_env, str) and api_key_env.startswith("nvapi-"):
+            self.api_key = api_key_env
+            self.api_key_env = "NVIDIA_API_KEY"
+        else:
+            self.api_key = api_key or os.getenv(api_key_env)
         if not self.api_key:
-            raise RuntimeError(f"Missing NVIDIA API key. Set {api_key_env}=... in your shell or .env file.")
+            raise RuntimeError("Missing NVIDIA API key. Set NVIDIA_API_KEY=... in your shell or .env file.")
         self.timeout_seconds = timeout_seconds
         self.client = OpenAI(base_url=self.base_url, api_key=self.api_key, timeout=timeout_seconds)
         self.rate_limiter = RateLimiter(rpm)
@@ -191,12 +200,46 @@ class NvidiaClient:
         self.enable_thinking = bool(enable_thinking)
         self.reasoning_budget = int(reasoning_budget or 0)
         self.extra_body = dict(extra_body or {})
+        self.max_api_retries = int(max_api_retries or 0)
+        self.rate_limit_backoff_seconds = float(rate_limit_backoff_seconds or 20.0)
 
     @staticmethod
     def _opt(options: Optional[Dict[str, Any]], key: str, default: Any) -> Any:
         if not options:
             return default
         return options.get(key, default)
+
+    @staticmethod
+    def _is_rate_limit_exception(exc: Exception) -> bool:
+        status = getattr(exc, "status_code", None) or getattr(getattr(exc, "response", None), "status_code", None)
+        if str(status) == "429":
+            return True
+        txt = repr(exc).lower()
+        return "429" in txt or "rate limit" in txt or "too many requests" in txt
+
+    @staticmethod
+    def _is_response_format_exception(exc: Exception) -> bool:
+        txt = repr(exc).lower()
+        return "response_format" in txt or "json_object" in txt or "unsupported" in txt
+
+    def _sleep_after_rate_limit(self, attempt: int, exc: Exception) -> None:
+        retry_after = None
+        try:
+            headers = getattr(getattr(exc, "response", None), "headers", None) or {}
+            retry_after = headers.get("retry-after") or headers.get("Retry-After")
+        except Exception:
+            retry_after = None
+        if retry_after is not None:
+            try:
+                sleep_s = float(retry_after)
+            except Exception:
+                sleep_s = None
+        else:
+            sleep_s = None
+        if sleep_s is None:
+            sleep_s = self.rate_limit_backoff_seconds * (attempt + 1)
+        sleep_s = min(max(float(sleep_s), self.rate_limit_backoff_seconds), 180.0)
+        time.sleep(sleep_s)
 
     def _extra_body_for_call(self, think: Optional[bool]) -> Dict[str, Any]:
         extra = dict(self.extra_body)
@@ -223,7 +266,6 @@ class NvidiaClient:
         allow_response_format: bool = True,
     ) -> OllamaResponse:
         start = time.time()
-        self.rate_limiter.wait()
 
         temperature = float(self._opt(options, "temperature", 0.2))
         top_p = float(self._opt(options, "top_p", 0.9))
@@ -245,19 +287,36 @@ class NvidiaClient:
         if json_mode and allow_response_format:
             kwargs["response_format"] = {"type": "json_object"}
 
-        try:
-            completion = self.client.chat.completions.create(**kwargs)
-        except Exception as exc:
-            if json_mode and allow_response_format:
-                return self._create_completion(
-                    model=model,
-                    messages=messages,
-                    options=options,
-                    json_mode=json_mode,
-                    think=think,
-                    allow_response_format=False,
-                )
-            raise RuntimeError(f"NVIDIA API error for {model}: {repr(exc)}") from exc
+        last_exc: Optional[Exception] = None
+        for api_attempt in range(self.max_api_retries + 1):
+            try:
+                self.rate_limiter.wait()
+                completion = self.client.chat.completions.create(**kwargs)
+                break
+            except Exception as exc:
+                last_exc = exc
+                # If a model rejects OpenAI JSON response_format, retry once
+                # without it. Do not treat rate-limit errors as format errors.
+                if (
+                    json_mode
+                    and allow_response_format
+                    and not self._is_rate_limit_exception(exc)
+                    and self._is_response_format_exception(exc)
+                ):
+                    return self._create_completion(
+                        model=model,
+                        messages=messages,
+                        options=options,
+                        json_mode=json_mode,
+                        think=think,
+                        allow_response_format=False,
+                    )
+                if self._is_rate_limit_exception(exc) and api_attempt < self.max_api_retries:
+                    self._sleep_after_rate_limit(api_attempt, exc)
+                    continue
+                raise RuntimeError(f"NVIDIA API error for {model}: {type(exc).__name__}: {str(exc)[:500]}") from exc
+        else:
+            raise RuntimeError(f"NVIDIA API error for {model}: {repr(last_exc)}")
 
         content_parts: list[str] = []
         reasoning_parts: list[str] = []
@@ -464,6 +523,8 @@ def build_model_client(config_module: Any) -> MultiProviderClient:
             enable_thinking=bool(getattr(config_module, "NVIDIA_ENABLE_THINKING", False)),
             reasoning_budget=int(getattr(config_module, "NVIDIA_REASONING_BUDGET", 0)),
             extra_body=dict(getattr(config_module, "NVIDIA_EXTRA_BODY", {}) or {}),
+            max_api_retries=int(getattr(config_module, "NVIDIA_MAX_API_RETRIES", 6)),
+            rate_limit_backoff_seconds=float(getattr(config_module, "NVIDIA_RATE_LIMIT_BACKOFF_SECONDS", 20.0)),
         )
 
     return MultiProviderClient(

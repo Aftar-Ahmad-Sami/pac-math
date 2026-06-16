@@ -26,7 +26,9 @@ OLLAMA_TIMEOUT_SECONDS = 900
 NVIDIA_BASE_URL = "https://integrate.api.nvidia.com/v1"
 NVIDIA_API_KEY_ENV = "NVIDIA_API_KEY"
 NVIDIA_TIMEOUT_SECONDS = 900
-NVIDIA_RATE_LIMIT_RPM = 38.0
+NVIDIA_RATE_LIMIT_RPM = 30.0  # keep below free-tier 40 RPM; retries/fallbacks also consume requests
+NVIDIA_MAX_API_RETRIES = 6
+NVIDIA_RATE_LIMIT_BACKOFF_SECONDS = 20.0
 NVIDIA_STREAM = False
 
 # Main controlled PAC-Math protocol disables model-specific hidden thinking.
@@ -74,19 +76,19 @@ MODEL_PAIRS = [
     # v22 mixed local/API pilot pair. Explicit prefixes make the provider
     # unambiguous and the pair_id now matches the actual model source.
     {
-        "pair_id": "ollama_gemma4_31b__nvidia_nemotron3_ultra_550b_standard_v22",
+        "pair_id": "ollama_gemma4_31b__nvidia_nemotron3_ultra_550b_standard_v23",
         "agent_a_model": "ollama:gemma4:31b",
         "agent_b_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b",
     },
     {
-        "pair_id": "nvidia_nemotron3_ultra_550b__ollama_gemma4_31b_standard_v22",
+        "pair_id": "nvidia_nemotron3_ultra_550b__ollama_gemma4_31b_standard_v23",
         "agent_a_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b",
         "agent_b_model": "ollama:gemma4:31b",
     },
 
     # Hosted/API-only version. Enable this only if you want NVIDIA-served Gemma.
-    # {"pair_id": "nvidia_google_gemma4_31b_it__nvidia_nemotron3_ultra_550b_standard_v22", "agent_a_model": "nvidia:google/gemma-4-31b-it", "agent_b_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b"},
-    # {"pair_id": "nvidia_nemotron3_ultra_550b__nvidia_google_gemma4_31b_it_standard_v22", "agent_a_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b", "agent_b_model": "nvidia:google/gemma-4-31b-it"},
+    # {"pair_id": "nvidia_google_gemma4_31b_it__nvidia_nemotron3_ultra_550b_standard_v23", "agent_a_model": "nvidia:google/gemma-4-31b-it", "agent_b_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b"},
+    # {"pair_id": "nvidia_nemotron3_ultra_550b__nvidia_google_gemma4_31b_it_standard_v23", "agent_a_model": "nvidia:nvidia/nemotron-3-ultra-550b-a55b", "agent_b_model": "nvidia:google/gemma-4-31b-it"},
 
     # Completed local baselines. Keep disabled unless intentionally recomputing.
     # {"pair_id": "qwen36_27b__phi4_14b_standard_v19", "agent_a_model": "qwen3.6:27b", "agent_b_model": "phi4:14b"},
@@ -104,14 +106,14 @@ GENERATION_OPTIONS = {
     # 700 was too small for NVIDIA/Gemma style JSON responses and caused
     # done_reason=length / eval_count=700 truncation. Keep this large enough
     # for complete JSON but still bounded for cost and latency.
-    "num_predict": 1400,
+    "num_predict": 2600,
     "seed": 42,
 }
 
 # If a candidate hits the generation length limit, PAC-Math automatically
 # retries that JSON request once with this larger cap before marking it failed.
 LENGTH_RETRY_ENABLED = True
-LENGTH_RETRY_NUM_PREDICT = 2200
+LENGTH_RETRY_NUM_PREDICT = 5000
 
 
 # v18 Ollama compatibility controls. Qwen-style reasoning models can return
@@ -123,7 +125,7 @@ OLLAMA_PREFER_CHAT = True
 
 # Debate and parsing
 DEBATE_ROUNDS = 2  # implemented as critique round + revision round
-MAX_JSON_RETRIES = 3
+MAX_JSON_RETRIES = 4
 
 # Reliability smoothing
 ALPHA = 10.0
@@ -141,7 +143,7 @@ ANSWER_COL_CANDIDATES = ["answer", "solution", "Answer", "final_answer"]
 # The runner will automatically ignore and regenerate cached records whose
 # protocol_version does not match this value. This prevents silently reusing
 # stale records from older debate protocols.
-PROTOCOL_VERSION = "standard_debate_v22_provider_parse_retry"
+PROTOCOL_VERSION = "standard_debate_v23_nvidia_rate_norm_fix"
 
 # Experiment behavior
 SAVE_EVERY_N_PROBLEMS = 5
@@ -152,7 +154,8 @@ PYTHONHASHSEED = 42
 # should not be treated as complete; otherwise bad NVIDIA/Ollama responses are
 # cached forever and calibration/test summaries silently include failures.
 REQUIRE_ALL_CANDIDATES_PARSE_OK = True
-RECORD_PARSE_RETRY_ATTEMPTS = 1
+RECORD_PARSE_RETRY_ATTEMPTS = 2
+INSPECT_ONLY_CURRENT_PROTOCOL = True
 
 
 # Adaptive PAC selector

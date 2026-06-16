@@ -23,7 +23,7 @@ def test_model(model: str):
         model=model,
         prompt=prompt,
         system="You are a precise math assistant. Return JSON only.",
-        options={"temperature": 0.0, "top_p": 0.9, "num_predict": 500},
+        options={"temperature": 0.0, "top_p": 0.9, "num_predict": 800},
         json_mode=True,
         think=False,
     )
@@ -38,5 +38,18 @@ def test_model(model: str):
 
 
 if __name__ == "__main__":
-    # Edit this line for any NVIDIA-hosted model listed on build.nvidia.com.
-    test_model("google/gemma-4-31b-it")
+    # Test only NVIDIA-routed models from the active MODEL_PAIRS.
+    client = build_model_client(config)
+    models = []
+    for pair in getattr(config, "MODEL_PAIRS", []):
+        for key in ["agent_a_model", "agent_b_model"]:
+            model = pair.get(key, "")
+            if model and client.provider_for_model(model) == "nvidia":
+                clean = client.routed_model_name(model)
+                if clean not in models:
+                    models.append(clean)
+    if not models:
+        raise SystemExit("No NVIDIA-routed models found in config.MODEL_PAIRS")
+    for model in models:
+        test_model(model)
+        print("-" * 100)

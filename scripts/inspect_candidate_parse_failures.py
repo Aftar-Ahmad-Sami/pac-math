@@ -22,7 +22,14 @@ def summarize(split: str = "pilot") -> None:
     pair_counts = Counter()
     model_counts = Counter()
 
+    current_only = bool(getattr(config, "INSPECT_ONLY_CURRENT_PROTOCOL", True))
+    current_protocol = str(getattr(config, "PROTOCOL_VERSION", ""))
+    skipped_old = 0
+
     for path, rec in iter_records(split):
+        if current_only and str(rec.get("protocol_version", "")) != current_protocol:
+            skipped_old += 1
+            continue
         for cand in rec.get("candidates", []) or []:
             cid = str(cand.get("candidate_id", ""))
             candidate_counts[(rec.get("pair_id"), cid)] += 1
@@ -53,6 +60,9 @@ def summarize(split: str = "pilot") -> None:
             model_counts[str(item["model"])] += 1
 
     print(f"Split: {split}")
+    if current_only:
+        print(f"Current protocol only: {current_protocol}")
+        print(f"Skipped old-protocol records: {skipped_old}")
     print(f"Parse failures: {len(failures)}")
     print("\nFailures by pair:")
     for k, v in pair_counts.most_common():

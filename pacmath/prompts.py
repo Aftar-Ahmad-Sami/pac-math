@@ -32,6 +32,12 @@ Rules:
 - confidence must be a number from 0 to 100.
 - answer must be short and contain only the final answer, not the full solution.
 - Do not include Markdown.
+JSON safety rules:
+- Return exactly one JSON object and no other text.
+- For LaTeX, escape every backslash as double backslash, e.g. "\\\\frac{{1}}{{2}}" not "\\frac{{1}}{{2}}".
+- Prefer plain ASCII final answers when possible, e.g. sqrt(35), 90, 312, 80%, (21/5,23/5).
+- Do not put control characters, raw newlines, or unescaped backslashes inside JSON strings.
+
 """.strip()
 
 
@@ -64,6 +70,12 @@ Return only valid JSON with exactly these keys:
 
 Do not change your final answer yet. This round is critique only.
 Do not include Markdown.
+JSON safety rules:
+- Return exactly one JSON object and no other text.
+- For LaTeX, escape every backslash as double backslash, e.g. "\\\\frac{{1}}{{2}}" not "\\frac{{1}}{{2}}".
+- Prefer plain ASCII final answers when possible, e.g. sqrt(35), 90, 312, 80%, (21/5,23/5).
+- Do not put control characters, raw newlines, or unescaped backslashes inside JSON strings.
+
 """.strip()
 
 
@@ -106,6 +118,12 @@ Rules:
 - changed_answer must be true or false.
 - revised_answer must be short and contain only the final answer, not the full solution.
 - Do not include Markdown.
+JSON safety rules:
+- Return exactly one JSON object and no other text.
+- For LaTeX, escape every backslash as double backslash, e.g. "\\\\frac{{1}}{{2}}" not "\\frac{{1}}{{2}}".
+- Prefer plain ASCII final answers when possible, e.g. sqrt(35), 90, 312, 80%, (21/5,23/5).
+- Do not put control characters, raw newlines, or unescaped backslashes inside JSON strings.
+
 """.strip()
 
     return f"""
